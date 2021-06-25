@@ -2,6 +2,7 @@
 C++ tester for BLAS
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
+[![GitHub Workflow Status](https://github.com/tlapack/testBLAS/actions/workflows/cmake.yml/badge.svg)](https://github.com/tlapack/testBLAS/actions/workflows/cmake.yml)
 
 ## About
 

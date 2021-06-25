@@ -29,7 +29,7 @@ defaults:
 
 jobs:
 
-  build-all-os:
+  test-tlapack-templates:
     # Use GNU compilers
   
     # The CMake configure and build commands are platform agnostic and should work equally
@@ -42,6 +42,9 @@ jobs:
     
     - name: Checkout testBLAS
       uses: actions/checkout@v2
+
+    - name: Install MPFR C++
+      run: sudo apt install libmpfrc++-dev
 
     - name: Checkout Catch2
       uses: actions/checkout@v2
@@ -68,7 +71,7 @@ jobs:
       run: >
         cmake -B build
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -D BUILD_EXAMPLES=ON
+        -D TEST_MPFR=ON
         -D Catch2_DIR=${{env.Catch2_DIR}}
         -D tlapack_DIR=${{env.tlapack_DIR}}
 
@@ -81,3 +84,83 @@ jobs:
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ${{github.workspace}}/build/tester
+
+  test-blaspp-wrappers:
+    runs-on: ubuntu-latest
+    env:
+      blaspp_DIR: ${{github.workspace}}/blaspp
+    
+    steps:
+    
+    - name: Checkout testBLAS
+      uses: actions/checkout@v2
+
+    - name: Checkout Catch2
+      uses: actions/checkout@v2
+      with:
+        repository: catchorg/Catch2
+        path: Catch2
+
+    - name: Install Reference BLAS
+      run: sudo apt install libblas-dev
+
+    - name: Checkout BLAS++
+      run: git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
+
+    - name: Build and install BLAS++
+      working-directory: ${{env.blaspp_DIR}}
+      run: |
+        git checkout tlapack
+        mkdir build
+        cmake -Bbuild -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
+        cmake --build build --target install
+
+    - name: Checkout <T>LAPACK
+      uses: actions/checkout@v2
+      with:
+        repository: tlapack/tlapack
+        path: tlapack
+
+    - name: Build and install <T>LAPACK
+      working-directory: ${{env.tlapack_DIR}}
+      run: |
+        mkdir build
+        cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_BLASPP_WRAPPERS=ON -Dblaspp_DIR=${{env.blaspp_DIR}} -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+        cmake --build build --target install
+
+    - name: Configure testBLAS
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B build
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -D Catch2_DIR=${{env.Catch2_DIR}}
+        -D tlapack_DIR=${{env.tlapack_DIR}}
+
+    - name: Build testBLAS
+      # Build your program with the given configuration
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+
+    # Mind that the job won't fail if only this step fails
+    - name: Test INF propagation
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: |
+        echo "Mind that the job won't fail because of this step."
+        ./tester -# [#test_inf] -r compact
+
+    # Mind that the job won't fail if only this step fails
+    - name: Test NAN propagation
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: |
+        echo "Mind that the job won't fail because of this step."
+        ./tester -# [#test_nan] -r compact
+
+    # Mind that the job won't fail if only this step fails
+    - name: Test Corner Cases
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: |
+        echo "Mind that the job won't fail because of this step."
+        ./tester -# [#test_corner_cases] -r compact
