@@ -1,0 +1,88 @@
+name: CMake
+
+on:
+  push:
+    branches:
+    - master
+    paths:
+    - '.github/workflows/cmake.yml'
+    - '**CMakeLists.txt'
+    - '**.cmake'
+    - '**test_**'
+  pull_request:
+    paths:
+    - '.github/workflows/cmake.yml'
+    - '**CMakeLists.txt'
+    - '**.cmake'
+    - '**test_**'
+
+env:
+  CXXFLAGS: "-Wall -pedantic"
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+  tlapack_DIR: ${{github.workspace}}/tlapack
+  Catch2_DIR: ${{github.workspace}}/Catch2
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  build-all-os:
+    # Use GNU compilers
+  
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+    
+    steps:
+    
+    - name: Checkout testBLAS
+      uses: actions/checkout@v2
+
+    - name: Checkout Catch2
+      uses: actions/checkout@v2
+      with:
+        repository: catchorg/Catch2
+        path: Catch2
+
+    - name: Checkout <T>LAPACK
+      uses: actions/checkout@v2
+      with:
+        repository: tlapack/tlapack
+        path: tlapack
+
+    - name: Build and install <T>LAPACK
+      working-directory: ${{env.tlapack_DIR}}
+      run: |
+        mkdir build
+        cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+        cmake --build build --target install
+
+    - name: Configure CMake on all platforms
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B build
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -D BUILD_EXAMPLES=ON
+        -D Catch2_DIR=${{env.Catch2_DIR}}
+        -D tlapack_DIR=${{env.tlapack_DIR}}
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ${{github.workspace}}/build/tester
