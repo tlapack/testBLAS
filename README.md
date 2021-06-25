@@ -11,6 +11,17 @@ testBLAS
 + uses the C++ BLAS interface of [\<T\>LAPACK](https://github.com/tlapack/tlapack).
 + uses [BLAS++](https://bitbucket.org/icl/blaspp) wrappers as the interface to vendor BLAS.
 
+Some additional information:
+
+1. The test files are in the [src](src) directory. To add a new test case, you just need to create a file `test_<something>.cpp` under the [src](src) directory and build testBLAS.
+
+2. The test file [test_corner_cases.cpp](src/test_corner_cases.cpp) has corner cases tests based on the BLAS specifications from:
+   - [Lawson CL, Hanson RJ, Kincaid DR, Krogh FT (1979) Basic Linear Algebra Subprograms for Fortran Usage. ACM Trans Math Softw 5:308–323.](https://doi.org/10.1145/355841.355847)
+   - [Dongarra JJ, Du Croz J, Hammarling S, Hanson RJ (1988) An Extended Set of FORTRAN Basic Linear Algebra Subprograms. ACM Trans Math Softw 14:1–17.](https://doi.org/10.1145/42288.42291)
+   - [Dongarra JJ, Du Croz J, Hammarling S, Duff IS (1990) A set of level 3 basic linear algebra subprograms. ACM Trans Math Softw 16:1–17.](https://doi.org/10.1145/77626.79170)
+
+3. Currently, testBLAS uses the [default error handler from <T>LAPACK](https://github.com/tlapack/tlapack/blob/master/src/xerbla.cpp).
+
 *Supported in part by [NSF ACI 2004850](http://www.nsf.gov/awardsearch/showAward?AWD_ID=2004850).*
 
 ## How to build testBLAS
@@ -65,6 +76,16 @@ Here are the testBLAS specific options and their default values
 
         Use mpreal from MPFR C++ library
         (http://www.holoborodko.com/pavel/mpfr/) for testing.
+
+## Testing
+
+There are 2 workflows that run automatically:
+
+- the first one uses testBLAS to test the [BLAS templates in \<T\>LAPACK](https://github.com/tlapack/tlapack/include/blas).
+
+- the second one uses testBLAS to test the [BLAS++ wrappers](https://bitbucket.org/icl/blaspp/src/master/include/blas/wrappers.hh) to the [Netlib Reference BLAS](https://github.com/Reference-LAPACK/lapack/tree/master/BLAS/SRC).
+
+See https://github.com/tlapack/testBLAS/actions.
 
 ## License
 
