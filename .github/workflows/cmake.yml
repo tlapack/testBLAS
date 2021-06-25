@@ -8,13 +8,13 @@ on:
     - '.github/workflows/cmake.yml'
     - '**CMakeLists.txt'
     - '**.cmake'
-    - '**test_**'
+    - '**test_*'
   pull_request:
     paths:
     - '.github/workflows/cmake.yml'
     - '**CMakeLists.txt'
     - '**.cmake'
-    - '**test_**'
+    - '**test_*'
 
 env:
   CXXFLAGS: "-Wall -pedantic"
@@ -36,12 +36,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
+    runs-on: ubuntu-latest
     
     steps:
     
@@ -67,7 +62,7 @@ jobs:
         cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
-    - name: Configure CMake on all platforms
+    - name: Configure testBLAS
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
@@ -77,7 +72,7 @@ jobs:
         -D Catch2_DIR=${{env.Catch2_DIR}}
         -D tlapack_DIR=${{env.tlapack_DIR}}
 
-    - name: Build
+    - name: Build testBLAS
       # Build your program with the given configuration
       run: cmake --build build --config ${{env.BUILD_TYPE}}
 
