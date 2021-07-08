@@ -10,6 +10,7 @@
 #include <catch2/catch.hpp>
 #include <tblas.hpp>
 #include "test_types.hpp"
+#include "utils.hpp"
 
 #include <limits>
 #include <vector>
@@ -17,84 +18,58 @@
 
 using namespace blas;
 
-template< typename real_t >
-inline void set_nan_vec(
-    std::vector<real_t>& nan_vec )
-{
-    static_assert( ! is_complex<real_t>::value,
-                    "real_t must be a Real type." );
-    const real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    nan_vec = std::vector<real_t>({ 
-        nan
-    });
-}
+// -----------------------------------------------------------------------------
+// Auxiliary routines
 
+/**
+ * @brief Set Ak = -k + i*k
+ */
 template< typename real_t >
-inline void set_nan_vec(
-    std::vector< std::complex<real_t> >& nan_vec )
-{
-    using T = std::complex<real_t>;
-    const real_t inf = std::numeric_limits<real_t>::infinity();
-    const real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    nan_vec = std::vector< T >({
-        nan,
-        T(0.0,nan),
-        T(inf,nan),
-        T(nan,inf),
-        T(-inf,nan),
-        T(nan,-inf)
-    });
-}
-
-template< typename real_t >
-inline void set_inf_vec( 
-    std::vector<real_t>& inf_vec )
-{
-    static_assert( ! is_complex<real_t>::value,
-                    "real_t must be a Real type." );
-    const real_t inf = std::numeric_limits<real_t>::infinity();
-    inf_vec = std::vector<real_t>({ inf });
-}
-
-template< typename real_t >
-inline void set_inf_vec( 
-    std::vector< std::complex<real_t> >& inf_vec )
-{
-    using T = std::complex<real_t>;
-    const real_t inf = std::numeric_limits<real_t>::infinity();
-    inf_vec = std::vector< T >({
-        inf,
-        T(0.0,inf),
-        T(-inf,0.0),
-        T(0.0,-inf)
-    });
-}
-
-template< typename real_t >
-inline void set_complex1( real_t& Ak, blas::size_t k ){
-    static_assert( ! is_complex<real_t>::value,
-                    "real_t must be a Real type." );
-}
-
-template< typename real_t >
-inline void set_complex1( std::complex<real_t>& Ak, blas::size_t k ){
+inline void set_complexk( std::complex<real_t>& Ak, blas::size_t k ){
     Ak = std::complex<real_t>( -k, k );
 }
-
 template< typename real_t >
-inline void set_complex2( real_t& Ak, blas::size_t k ){
-    static_assert( ! is_complex<real_t>::value,
-                    "real_t must be a Real type." );
+inline void set_complexk( real_t& Ak, blas::size_t k ){
+    static_assert( ! is_complex<real_t>::value, "real_t must be a Real type." );
 }
 
+/**
+ * @brief Set Ak = OV * ((k+2)/(k+3)) * (1+i)
+ */
 template< typename real_t >
-inline void set_complex2( std::complex<real_t>& Ak, blas::size_t k ){
+inline void set_complexOV( std::complex<real_t>& Ak, blas::size_t k ){
     const real_t OV = std::numeric_limits<real_t>::max();
     Ak = OV * (real_t)((k+2.)/(k+3.)) * std::complex<real_t>( 1, 1 );
 }
+template< typename real_t >
+inline void set_complexOV( real_t& Ak, blas::size_t k ){
+    static_assert( ! is_complex<real_t>::value, "real_t must be a Real type." );
+}
 
+// -----------------------------------------------------------------------------
+// Test cases for iamax with Infs and NaNs at specific positions
+
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 NaN
+ * 
+ * NaN locations: 1;  2; n/2;  n.
+ * 
+ * If checkWithInf == true:
+ *       For NaN location above:
+ *              Insert Inf in first non-NaN location
+ *              Insert -Inf in first non-NaN location
+ *              Ditto for last non-NaN location
+ *              Ditto for first and last non-NaN locations
+ * 
+ * @param[in] n
+ *      Size of A
+ * @param[in] A
+ *      Array with non-NAN data
+ * @param[in] checkWithInf
+ *      If true, run the test cases with Infs.
+ */
 template< typename TestType >
-void check_1nan(
+void check_iamax_1nan(
     const blas::size_t n,
     TestType A[],
     const bool checkWithInf = true )
@@ -102,18 +77,18 @@ void check_1nan(
     using real_t = real_type<TestType>;
     
     std::vector<TestType> nan_vec;
-    set_nan_vec( nan_vec );
+    testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
     const blas::size_t k_arr[] = { 0, 1, n-1, n/2 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 1 ) ? 1 : (
         ( n == 2 ) ? 2 : (
         ( n == 3 ) ? 3
                    : 4 ));
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 1) {
+    for (unsigned i = 0; i < num_kvals; i += 1) {
         
         const auto& k = k_arr[i];
         const TestType Ak = A[k];
@@ -174,8 +149,27 @@ void check_1nan(
     }
 }
 
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 NaNs
+ * 
+ * NaN locations: 1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n.
+ * 
+ * If checkWithInf == true:
+ *       For NaN location above:
+ *              Insert Inf in first non-NaN location
+ *              Insert -Inf in first non-NaN location
+ *              Ditto for last non-NaN location
+ *              Ditto for first and last non-NaN locations
+ * 
+ * @param[in] n
+ *      Size of A
+ * @param[in] A
+ *      Array with non-NAN data
+ * @param[in] checkWithInf
+ *      If true, run the test cases with Infs.
+ */
 template< typename TestType >
-void check_2nan(
+void check_iamax_2nans(
     const blas::size_t n,
     TestType A[],
     const bool checkWithInf = true )
@@ -183,7 +177,7 @@ void check_2nan(
     using real_t = real_type<TestType>;
     
     std::vector<TestType> nan_vec;
-    set_nan_vec( nan_vec );
+    testBLAS::set_nan_vector( nan_vec );
             
     // Indexes for test
     const blas::size_t k_arr[]
@@ -193,14 +187,14 @@ void check_2nan(
             0, n/2,
             1, n/2,
             n/2, n-1 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 1 ) ? 0 : (
         ( n == 2 ) ? 2 : (
         ( n == 3 ) ? 6
                     : 12 ));
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 2) {
+    for (unsigned i = 0; i < num_kvals; i += 2) {
         
         const auto& k1 = k_arr[i];
         const auto& k2 = k_arr[i+1];
@@ -270,8 +264,27 @@ void check_2nan(
     }
 }
 
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 NaNs
+ * 
+ * NaN locations: 1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n.
+ * 
+ * If checkWithInf == true:
+ *       For NaN location above:
+ *              Insert Inf in first non-NaN location
+ *              Insert -Inf in first non-NaN location
+ *              Ditto for last non-NaN location
+ *              Ditto for first and last non-NaN locations
+ * 
+ * @param[in] n
+ *      Size of A
+ * @param[in] A
+ *      Array with non-NAN data
+ * @param[in] checkWithInf
+ *      If true, run the test cases with Infs.
+ */
 template< typename TestType >
-void check_3nan(
+void check_iamax_3nans(
     const blas::size_t n,
     TestType A[],
     const bool checkWithInf = true )
@@ -279,7 +292,7 @@ void check_3nan(
     using real_t = real_type<TestType>;
     
     std::vector<TestType> nan_vec;
-    set_nan_vec( nan_vec );
+    testBLAS::set_nan_vector( nan_vec );
             
     // Indexes for test
     const blas::size_t k_arr[]
@@ -287,13 +300,13 @@ void check_3nan(
             0, 1, n/2,
             0, n/2, n-1,
             1, n/2, n-1 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 2 ) ? 0 : (
         ( n == 3 ) ? 3
                     : 12 );
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 3) {
+    for (unsigned i = 0; i < num_kvals; i += 3) {
         
         const auto& k1 = k_arr[i];
         const auto& k2 = k_arr[i+1];
@@ -366,24 +379,35 @@ void check_3nan(
     }
 }
 
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 Inf
+ * 
+ * Inf locations: 1;  2; n/2;  n.
+ * 
+ * @param[in] n
+ *      Size of A.
+ * @param[in] A
+ *      Array with finite values.
+ */
+
 template< typename TestType >
-void check_1inf(
+void check_iamax_1inf(
     const blas::size_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
-    set_inf_vec( inf_vec );
+    testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
     const blas::size_t k_arr[] = { 0, 1, n-1, n/2 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 1 ) ? 1 : (
         ( n == 2 ) ? 2 : (
         ( n == 3 ) ? 3
                     : 4 ));
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 1) {
+    for (unsigned i = 0; i < num_kvals; i += 1) {
         
         const auto& k = k_arr[i];
         const TestType Ak = A[k];
@@ -402,13 +426,23 @@ void check_1inf(
     }
 }
 
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 Infs
+ * 
+ * Inf locations: 1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n.
+ * 
+ * @param[in] n
+ *      Size of A.
+ * @param[in] A
+ *      Array with finite values.
+ */
 template< typename TestType >
-void check_2inf(
+void check_iamax_2infs(
     const blas::size_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
-    set_inf_vec( inf_vec );
+    testBLAS::set_inf_vector( inf_vec );
             
     // Indexes for test
     const blas::size_t k_arr[]
@@ -418,14 +452,14 @@ void check_2inf(
             0, n/2,
             1, n/2,
             n/2, n-1 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 1 ) ? 0 : (
         ( n == 2 ) ? 2 : (
         ( n == 3 ) ? 6
-                    : 12 ));
+                   : 12 ));
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 2) {
+    for (unsigned i = 0; i < num_kvals; i += 2) {
         
         const auto& k1 = k_arr[i];
         const auto& k2 = k_arr[i+1];
@@ -447,13 +481,23 @@ void check_2inf(
     }
 }
 
+/**
+ * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 Infs
+ * 
+ * Inf locations: 1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n.
+ * 
+ * @param[in] n
+ *      Size of A.
+ * @param[in] A
+ *      Array with finite values.
+ */
 template< typename TestType >
-void check_3inf(
+void check_iamax_3infs(
     const blas::size_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
-    set_inf_vec( inf_vec );
+    testBLAS::set_inf_vector( inf_vec );
             
     // Indexes for test
     const blas::size_t k_arr[]
@@ -461,13 +505,13 @@ void check_3inf(
             0, 1, n/2,
             0, n/2, n-1,
             1, n/2, n-1 };
-    const unsigned k_values = 
+    const unsigned num_kvals = 
         ( n <= 2 ) ? 0 : (
         ( n == 3 ) ? 3
                     : 12 );
     
     // Tests
-    for (unsigned i = 0; i < k_values; i += 3) {
+    for (unsigned i = 0; i < num_kvals; i += 3) {
         
         const auto& k1 = k_arr[i];
         const auto& k2 = k_arr[i+1];
@@ -493,8 +537,11 @@ void check_3inf(
     }
 }
 
+// -----------------------------------------------------------------------------
+// Main Test Cases
+
 /**
- * @brief Test case for iamax with arrays with at least 1 NaN
+ * @brief Test case for iamax with arrays containing at least 1 NaN
  * 
  * Default entries:
  *  (1) A[k] = (-1)^k*k
@@ -504,25 +551,6 @@ void check_3inf(
  *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
  *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
  *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- * 
- * Test cases:
- * 
- * (1) At least 1 NaN, no Infs (<=14 cases)
- *       1 NaN, at location:
- *              1;  2; n/2;  n
- *       2 NaNs (if possible, i.e. n>1, ditto later)
- *              1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n
- *       3 NaNs
- *              1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n
- * 
- * (2) At least 1 NaN and at least 1 Inf
- *       For each example above (<=7*14 cases):
- *              Insert Inf in first non-NaN location
- *              Insert -Inf in first non-NaN location
- *              Ditto for last non-NaN location
- *              Ditto for first and last non-NaN locations
- * 
- * (3) All NaNs
  */
 TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1 NaN",
                     "[iamax][BLASlv1][NaN]", TEST_TYPES ) {
@@ -543,9 +571,9 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
             for (blas::size_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? k : -k;
             for (const auto& n : n_vec) {
-                check_1nan( n, A );
-                check_2nan( n, A );
-                check_3nan( n, A );
+                check_iamax_1nan( n, A );
+                check_iamax_2nans( n, A );
+                check_iamax_3nans( n, A );
             }
         }
 
@@ -553,9 +581,9 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
             for (blas::size_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? inf : -inf;
             for (const auto& n : n_vec) {
-                check_1nan( n, A, false );
-                check_2nan( n, A, false );
-                check_3nan( n, A, false );
+                check_iamax_1nan( n, A, false );
+                check_iamax_2nans( n, A, false );
+                check_iamax_3nans( n, A, false );
             }
         }
 
@@ -563,49 +591,49 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
                 for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complex1( A[k], k );
-                    else              set_complex2( A[k], k );
+                    if ( k % 2 == 0 ) set_complexk( A[k], k );
+                    else              set_complexOV( A[k], k );
                 }
                 for (const auto& n : n_vec) {
-                    check_1nan( n, A );
-                    check_2nan( n, A );
-                    check_3nan( n, A );
+                    check_iamax_1nan( n, A );
+                    check_iamax_2nans( n, A );
+                    check_iamax_3nans( n, A );
                 }
             }
 
             WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complex2( A[k], k );
-                    else              set_complex1( A[k], k );
+                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
+                    else              set_complexk( A[k], k );
                 }
                 for (const auto& n : n_vec) {
-                    check_1nan( n, A );
-                    check_2nan( n, A );
-                    check_3nan( n, A );
+                    check_iamax_1nan( n, A );
+                    check_iamax_2nans( n, A );
+                    check_iamax_3nans( n, A );
                 }
             }
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
                 for (const auto& n : n_vec) {
                     for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complex1( A[k], k );
-                        else              set_complex2( A[k], n-k );
+                        if ( k % 2 == 0 ) set_complexk( A[k], k );
+                        else              set_complexOV( A[k], n-k );
                     }
-                    check_1nan( n, A );
-                    check_2nan( n, A );
-                    check_3nan( n, A );
+                    check_iamax_1nan( n, A );
+                    check_iamax_2nans( n, A );
+                    check_iamax_3nans( n, A );
                 }
             }
 
             WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (const auto& n : n_vec) {
                     for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complex2( A[k], n-k );
-                        else              set_complex1( A[k], k );
+                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
+                        else              set_complexk( A[k], k );
                     }
-                    check_1nan( n, A );
-                    check_2nan( n, A );
-                    check_3nan( n, A );
+                    check_iamax_1nan( n, A );
+                    check_iamax_2nans( n, A );
+                    check_iamax_3nans( n, A );
                 }
             }
         }
@@ -620,28 +648,15 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
 }
 
 /**
- * @brief Test case for iamax with arrays with at least 1 Inf and no NaNs
+ * @brief Test case for iamax with arrays containing at least 1 Inf and no NaNs
  * 
  * Default entries:
  *  (1) A[k] = (-1)^k*k
- *  (2) A[k] = (-1)^k*Inf
  * and, for complex data type: 
  *  (3) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
  *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
  *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
  *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- * 
- * Test cases:
- * 
- * (1) At least 1 Inf (<=14 cases)
- *       1 Inf, at location:
- *              1;  2; n/2;  n
- *       2 Infs (if possible, i.e. n>1, ditto later)
- *              1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n
- *       3 Infs
- *              1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n
- * 
- * (3) All Infs
  */
 TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1 Inf and no NaNs",
                     "[iamax][BLASlv1][Inf]", TEST_TYPES ) {
@@ -662,9 +677,9 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1
             for (blas::size_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? k : -k;
             for (const auto& n : n_vec) {
-                check_1inf( n, A );
-                check_2inf( n, A );
-                check_3inf( n, A );
+                check_iamax_1inf( n, A );
+                check_iamax_2infs( n, A );
+                check_iamax_3infs( n, A );
             }
         }
 
@@ -672,49 +687,49 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
                 for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complex1( A[k], k );
-                    else              set_complex2( A[k], k );
+                    if ( k % 2 == 0 ) set_complexk( A[k], k );
+                    else              set_complexOV( A[k], k );
                 }
                 for (const auto& n : n_vec) {
-                    check_1inf( n, A );
-                    check_2inf( n, A );
-                    check_3inf( n, A );
+                    check_iamax_1inf( n, A );
+                    check_iamax_2infs( n, A );
+                    check_iamax_3infs( n, A );
                 }
             }
 
             WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complex2( A[k], k );
-                    else              set_complex1( A[k], k );
+                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
+                    else              set_complexk( A[k], k );
                 }
                 for (const auto& n : n_vec) {
-                    check_1inf( n, A );
-                    check_2inf( n, A );
-                    check_3inf( n, A );
+                    check_iamax_1inf( n, A );
+                    check_iamax_2infs( n, A );
+                    check_iamax_3infs( n, A );
                 }
             }
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
                 for (const auto& n : n_vec) {
                     for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complex1( A[k], k );
-                        else              set_complex2( A[k], n-k );
+                        if ( k % 2 == 0 ) set_complexk( A[k], k );
+                        else              set_complexOV( A[k], n-k );
                     }
-                    check_1inf( n, A );
-                    check_2inf( n, A );
-                    check_3inf( n, A );
+                    check_iamax_1inf( n, A );
+                    check_iamax_2infs( n, A );
+                    check_iamax_3infs( n, A );
                 }
             }
 
             WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (const auto& n : n_vec) {
                     for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complex2( A[k], n-k );
-                        else              set_complex1( A[k], k );
+                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
+                        else              set_complexk( A[k], k );
                     }
-                    check_1inf( n, A );
-                    check_2inf( n, A );
-                    check_3inf( n, A );
+                    check_iamax_1inf( n, A );
+                    check_iamax_2infs( n, A );
+                    check_iamax_3infs( n, A );
                 }
             }
         }
@@ -751,8 +766,8 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
 
     WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
         for (blas::size_t k = 0; k < N; ++k) {
-            if ( k % 2 == 0 ) set_complex1( A[k], k );
-            else              set_complex2( A[k], k );
+            if ( k % 2 == 0 ) set_complexk( A[k], k );
+            else              set_complexOV( A[k], k );
         }
         for (const auto& n : n_vec) {
             if ( n == 1 )          CHECK( iamax( n, A, 1 ) == 0 );
@@ -763,8 +778,8 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
 
     WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (blas::size_t k = 0; k < N; ++k) {
-            if ( k % 2 == 0 ) set_complex2( A[k], k );
-            else              set_complex1( A[k], k );
+            if ( k % 2 == 0 ) set_complexOV( A[k], k );
+            else              set_complexk( A[k], k );
         }
         for (const auto& n : n_vec) {
             if ( n == 1 )          CHECK( iamax( n, A, 1 ) == 0 );
@@ -776,8 +791,8 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
     WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
         for (const auto& n : n_vec) {
             for (blas::size_t k = 0; k < N; ++k) {
-                if ( k % 2 == 0 ) set_complex1( A[k], k );
-                else              set_complex2( A[k], n-k );
+                if ( k % 2 == 0 ) set_complexk( A[k], k );
+                else              set_complexOV( A[k], n-k );
             }
             if ( n == 1 ) CHECK( iamax( n, A, 1 ) == 0 );
             else          CHECK( iamax( n, A, 1 ) == 1 );
@@ -787,8 +802,8 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
     WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (const auto& n : n_vec) {
             for (blas::size_t k = 0; k < N; ++k) {
-                if ( k % 2 == 0 ) set_complex2( A[k], n-k );
-                else              set_complex1( A[k], k );
+                if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
+                else              set_complexk( A[k], k );
             }
             CHECK( iamax( n, A, 1 ) == 0 );
         }
