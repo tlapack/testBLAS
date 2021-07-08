@@ -282,8 +282,8 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         buffer += """
     SECTION ( "n <= 0" ) {
         if( std::is_signed<blas::size_t>::value )
-            CHECK( iamax(-1, x, incx ) == INVALID_INDEX );
-        CHECK( iamax( 0, x, incx ) == INVALID_INDEX );
+            CHECK( iamax(-1, x, incx ) == 0 );
+        CHECK( iamax( 0, x, incx ) == 0 );
     }""",
         countCases += 2
 

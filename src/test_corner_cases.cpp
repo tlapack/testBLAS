@@ -165,8 +165,8 @@ TEMPLATE_TEST_CASE( "iamax satisfies all corner cases", "[iamax][BLASlv1]", TEST
     }
     SECTION ( "n <= 0" ) {
         if( std::is_signed<blas::size_t>::value )
-            CHECK( iamax(-1, x, incx ) == INVALID_INDEX );
-        CHECK( iamax( 0, x, incx ) == INVALID_INDEX );
+            CHECK( iamax(-1, x, incx ) == 0 );
+        CHECK( iamax( 0, x, incx ) == 0 );
     }
 }
 
