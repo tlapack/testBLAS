@@ -8,6 +8,7 @@
 #define __TESTBLAS_UTILS_HH__
 
 #include "test_types.hpp"
+#include <vector>
 
 namespace testBLAS {
 
