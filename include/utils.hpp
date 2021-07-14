@@ -58,6 +58,94 @@ inline void set_inf_vector(
     infVec = std::vector< Complex >( TEST_CPLX_INF );
 }
 
+/**
+ * @brief Set the array indexes for tests
+ * 
+ * Locations: 0;  1; n/16; n/2;  n-1.
+ * 
+ */
+template< typename int_t >
+inline void set_array_locations(
+    const int_t n,
+    std::vector<int_t>& locVec ) 
+{
+    const int_t arr[] = { 0, 1, n-1, n/2, n/16 };
+    const int_t numVals = 
+        ( n <= 1 )  ? 1 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 4
+                    : 5 )));
+    locVec = std::vector<int_t>( arr, arr + numVals );
+}
+
+/**
+ * @brief Set the pairs of indexes for tests
+ * 
+ * Locations: 0,1; 0,n/16;    0,n/2;    0,n-1;   
+ *                 1,n/16;    1,n/2;    1,n-1;
+ *                         n/16,n/2; n/16,n-1;
+ *                                    n/2,n-1.
+ */
+template< typename int_t >
+inline void set_array_pairLocations(
+    const int_t n,
+    std::vector<int_t>& locVec ) 
+{
+    const int_t arr[]
+        = { 0, 1,
+            0, n-1,
+            1, n-1,
+            0, n/2,
+            1, n/2,
+            n/2, n-1,
+            0, n/16,
+            1, n/16,
+            n/16, n/2,
+            n/16, n-1 };
+    const int_t numVals = 
+        ( n <= 1 )  ? 0 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 6 : (
+        ( n < 32 )  ? 12
+                    : 20 )));
+    locVec = std::vector<int_t>( arr, arr + numVals );
+}
+
+/**
+ * @brief Set the trios of indexes for tests
+ * 
+ * Locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
+ *                      0,n/16,n/2; 0,n/16,n-1;
+ *                                  0,n/2,n-1;
+ *            1,n/16,n/2; 1,n/16,n-1;
+ *                        1,n-2,n-1;
+ *            n/16,n/2,n-1.
+ */
+template< typename int_t >
+inline void set_array_trioLocations(
+    const int_t n,
+    std::vector<int_t>& locVec ) 
+{
+    const int_t arr[]
+        = { 0, 1, n-1,
+            0, 1, n/2,
+            0, n/2, n-1,
+            1, n/2, n-1,
+            0, 1, n/16,
+            0, n/16, n/2,
+            0, n/16, n-1,
+            1, n/16, n/2,
+            1, n/16, n-1,
+            n/16, n/2, n-1 };
+    const int_t numVals = 
+        ( n <= 2 )  ? 0 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 12
+                    : 30 ));
+    locVec = std::vector<int_t>( arr, arr + numVals );
+}
+
 }
 
 #endif // __TESTBLAS_UTILS_HH__

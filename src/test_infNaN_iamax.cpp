@@ -52,7 +52,7 @@ inline void set_complexOV( real_t& Ak, blas::size_t k ){
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 NaN
  * 
- * NaN locations: 0;  1; n/16; n/2;  n-1.
+ * NaN locations: @see testBLAS::set_array_locations
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -80,18 +80,11 @@ void check_iamax_1nan(
     testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
-    const blas::size_t k_arr[] = { 0, 1, n-1, n/2, n/16 };
-    const unsigned num_kvals = 
-        ( n <= 1 )  ? 1 : (
-        ( n == 2 )  ? 2 : (
-        ( n == 3 )  ? 3 : (
-        ( n < 32 )  ? 4
-                    : 5 )));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_locations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 1) {
-        
-        const auto& k = k_arr[i];
+    for (const auto& k : k_vec) {
         const TestType Ak = A[k];
         
         const blas::size_t infIdx1 = (k > 0) ? 0 : 1;
@@ -153,10 +146,7 @@ void check_iamax_1nan(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 NaNs
  * 
- * NaN locations: 0,1; 0,n/16;    0,n/2;    0,n-1;   
- *                     1,n/16;    1,n/2;    1,n-1;
- *                             n/16,n/2; n/16,n-1;
- *                                        n/2,n-1.
+ * NaN locations: @see testBLAS::set_array_pairLocations
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -182,31 +172,16 @@ void check_iamax_2nans(
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
-            
+        
     // Indexes for test
-    const blas::size_t k_arr[]
-        = { 0, 1,
-            0, n-1,
-            1, n-1,
-            0, n/2,
-            1, n/2,
-            n/2, n-1,
-            0, n/16,
-            1, n/16,
-            n/16, n/2,
-            n/16, n-1 };
-    const unsigned num_kvals = 
-        ( n <= 1 )  ? 0 : (
-        ( n == 2 )  ? 2 : (
-        ( n == 3 )  ? 6 : (
-        ( n < 32 )  ? 12
-                    : 20 )));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_pairLocations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 2) {
+    for (unsigned i = 0; i < k_vec.size(); i += 2) {
         
-        const auto& k1 = k_arr[i];
-        const auto& k2 = k_arr[i+1];
+        const auto& k1 = k_vec[i];
+        const auto& k2 = k_vec[i+1];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         
@@ -276,12 +251,7 @@ void check_iamax_2nans(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 NaNs
  * 
- * NaN locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
- *                          0,n/16,n/2; 0,n/16,n-1;
- *                                       0,n/2,n-1;
- *                1,n/16,n/2; 1,n/16,n-1;
- *                            1,n-2,n-1;
- *                n/16,n/2,n-1.
+ * NaN locations: @see testBLAS::set_array_trioLocations
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -307,31 +277,17 @@ void check_iamax_3nans(
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
-            
+        
     // Indexes for test
-    const blas::size_t k_arr[]
-        = { 0, 1, n-1,
-            0, 1, n/2,
-            0, n/2, n-1,
-            1, n/2, n-1,
-            0, 1, n/16,
-            0, n/16, n/2,
-            0, n/16, n-1,
-            1, n/16, n/2,
-            1, n/16, n-1,
-            n/16, n/2, n-1 };
-    const unsigned num_kvals = 
-        ( n <= 2 )  ? 0 : (
-        ( n == 3 )  ? 3 : (
-        ( n < 32 )  ? 12
-                    : 30 ));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_trioLocations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 3) {
+    for (unsigned i = 0; i < k_vec.size(); i += 3) {
         
-        const auto& k1 = k_arr[i];
-        const auto& k2 = k_arr[i+1];
-        const auto& k3 = k_arr[i+2];
+        const auto& k1 = k_vec[i];
+        const auto& k2 = k_vec[i+1];
+        const auto& k3 = k_vec[i+2];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         const TestType Ak3 = A[k3];
@@ -403,7 +359,7 @@ void check_iamax_3nans(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 Inf
  * 
- * Inf locations: 0;  1; n/16; n/2;  n-1.
+ * Inf locations: @see testBLAS::set_array_locations
  * 
  * @param[in] n
  *      Size of A.
@@ -420,18 +376,11 @@ void check_iamax_1inf(
     testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
-    const blas::size_t k_arr[] = { 0, 1, n-1, n/2, n/16 };
-    const unsigned num_kvals = 
-        ( n <= 1 )  ? 1 : (
-        ( n == 2 )  ? 2 : (
-        ( n == 3 )  ? 3 : (
-        ( n < 32 )  ? 4
-                    : 5 )));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_locations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 1) {
-        
-        const auto& k = k_arr[i];
+    for (const auto& k : k_vec) {
         const TestType Ak = A[k];
 
         for (const auto& aInf : inf_vec) {
@@ -451,10 +400,7 @@ void check_iamax_1inf(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 Infs
  * 
- * Inf locations: 0,1; 0,n/16;    0,n/2;    0,n-1;   
- *                     1,n/16;    1,n/2;    1,n-1;
- *                             n/16,n/2; n/16,n-1;
- *                                        n/2,n-1.
+ * Inf locations: @see testBLAS::set_array_pairLocations
  * 
  * @param[in] n
  *      Size of A.
@@ -468,31 +414,16 @@ void check_iamax_2infs(
 {    
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
-            
+        
     // Indexes for test
-    const blas::size_t k_arr[]
-        = { 0, 1,
-            0, n-1,
-            1, n-1,
-            0, n/2,
-            1, n/2,
-            n/2, n-1,
-            0, n/16,
-            1, n/16,
-            n/16, n/2,
-            n/16, n-1 };
-    const unsigned num_kvals = 
-        ( n <= 1 )  ? 0 : (
-        ( n == 2 )  ? 2 : (
-        ( n == 3 )  ? 6 : (
-        ( n < 32 )  ? 12
-                    : 20 )));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_pairLocations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 2) {
+    for (unsigned i = 0; i < k_vec.size(); i += 2) {
         
-        const auto& k1 = k_arr[i];
-        const auto& k2 = k_arr[i+1];
+        const auto& k1 = k_vec[i];
+        const auto& k2 = k_vec[i+1];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
 
@@ -514,12 +445,7 @@ void check_iamax_2infs(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 Infs
  * 
- * Inf locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
- *                          0,n/16,n/2; 0,n/16,n-1;
- *                                       0,n/2,n-1;
- *                1,n/16,n/2; 1,n/16,n-1;
- *                            1,n-2,n-1;
- *                n/16,n/2,n-1.
+ * Inf locations: @see testBLAS::set_array_trioLocations
  * 
  * @param[in] n
  *      Size of A.
@@ -533,31 +459,17 @@ void check_iamax_3infs(
 {    
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
-            
+        
     // Indexes for test
-    const blas::size_t k_arr[]
-        = { 0, 1, n-1,
-            0, 1, n/2,
-            0, n/2, n-1,
-            1, n/2, n-1,
-            0, 1, n/16,
-            0, n/16, n/2,
-            0, n/16, n-1,
-            1, n/16, n/2,
-            1, n/16, n-1,
-            n/16, n/2, n-1 };
-    const unsigned num_kvals = 
-        ( n <= 2 )  ? 0 : (
-        ( n == 3 )  ? 3 : (
-        ( n < 32 )  ? 12
-                    : 30 ));
+    std::vector<blas::size_t> k_vec;
+    testBLAS::set_array_trioLocations( n, k_vec );
     
     // Tests
-    for (unsigned i = 0; i < num_kvals; i += 3) {
+    for (unsigned i = 0; i < k_vec.size(); i += 3) {
         
-        const auto& k1 = k_arr[i];
-        const auto& k2 = k_arr[i+1];
-        const auto& k3 = k_arr[i+2];
+        const auto& k1 = k_vec[i];
+        const auto& k2 = k_vec[i+1];
+        const auto& k3 = k_vec[i+2];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         const TestType Ak3 = A[k3];
