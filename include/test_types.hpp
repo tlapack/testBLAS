@@ -40,6 +40,7 @@
     Complex( nan, inf), \
     Complex(-inf, nan), \
     Complex( nan,-inf) }
+    
 #define TEST_CPLX_INF { \
     Complex( inf, 0.0), \
     Complex( 0.0, inf), \

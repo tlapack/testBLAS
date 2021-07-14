@@ -1,4 +1,4 @@
-/// @file test_infNaN.cpp
+/// @file test_infNaN_iamax.cpp
 /// @brief Test cases for iamax with NaNs, Infs and the overflow threshold (OV).
 //
 // Copyright (c) 2021, University of Colorado Denver. All rights reserved.
@@ -52,7 +52,7 @@ inline void set_complexOV( real_t& Ak, blas::size_t k ){
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 NaN
  * 
- * NaN locations: 1;  2; n/2;  n.
+ * NaN locations: 0;  1; n/16; n/2;  n-1.
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -80,12 +80,13 @@ void check_iamax_1nan(
     testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
-    const blas::size_t k_arr[] = { 0, 1, n-1, n/2 };
+    const blas::size_t k_arr[] = { 0, 1, n-1, n/2, n/16 };
     const unsigned num_kvals = 
-        ( n <= 1 ) ? 1 : (
-        ( n == 2 ) ? 2 : (
-        ( n == 3 ) ? 3
-                   : 4 ));
+        ( n <= 1 )  ? 1 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 4
+                    : 5 )));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 1) {
@@ -152,7 +153,10 @@ void check_iamax_1nan(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 NaNs
  * 
- * NaN locations: 1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n.
+ * NaN locations: 0,1; 0,n/16;    0,n/2;    0,n-1;   
+ *                     1,n/16;    1,n/2;    1,n-1;
+ *                             n/16,n/2; n/16,n-1;
+ *                                        n/2,n-1.
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -186,12 +190,17 @@ void check_iamax_2nans(
             1, n-1,
             0, n/2,
             1, n/2,
-            n/2, n-1 };
+            n/2, n-1,
+            0, n/16,
+            1, n/16,
+            n/16, n/2,
+            n/16, n-1 };
     const unsigned num_kvals = 
-        ( n <= 1 ) ? 0 : (
-        ( n == 2 ) ? 2 : (
-        ( n == 3 ) ? 6
-                    : 12 ));
+        ( n <= 1 )  ? 0 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 6 : (
+        ( n < 32 )  ? 12
+                    : 20 )));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 2) {
@@ -204,11 +213,11 @@ void check_iamax_2nans(
         const blas::size_t infIdx1 =
             (k1 > 0) ? 0 : (
             (k2 > 1) ? 1
-                        : 2 );
+                       : 2 );
         const blas::size_t infIdx2 =
             (k2 < n-1) ? n-1 : (
             (k1 < n-2) ? n-2
-                        : n-3 );
+                       : n-3 );
 
         for (const auto& aNAN : nan_vec) {
 
@@ -267,7 +276,12 @@ void check_iamax_2nans(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 NaNs
  * 
- * NaN locations: 1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n.
+ * NaN locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
+ *                          0,n/16,n/2; 0,n/16,n-1;
+ *                                       0,n/2,n-1;
+ *                1,n/16,n/2; 1,n/16,n-1;
+ *                            1,n-2,n-1;
+ *                n/16,n/2,n-1.
  * 
  * If checkWithInf == true:
  *       For NaN location above:
@@ -299,11 +313,18 @@ void check_iamax_3nans(
         = { 0, 1, n-1,
             0, 1, n/2,
             0, n/2, n-1,
-            1, n/2, n-1 };
+            1, n/2, n-1,
+            0, 1, n/16,
+            0, n/16, n/2,
+            0, n/16, n-1,
+            1, n/16, n/2,
+            1, n/16, n-1,
+            n/16, n/2, n-1 };
     const unsigned num_kvals = 
-        ( n <= 2 ) ? 0 : (
-        ( n == 3 ) ? 3
-                    : 12 );
+        ( n <= 2 )  ? 0 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 12
+                    : 30 ));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 3) {
@@ -382,7 +403,7 @@ void check_iamax_3nans(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 Inf
  * 
- * Inf locations: 1;  2; n/2;  n.
+ * Inf locations: 0;  1; n/16; n/2;  n-1.
  * 
  * @param[in] n
  *      Size of A.
@@ -399,12 +420,13 @@ void check_iamax_1inf(
     testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
-    const blas::size_t k_arr[] = { 0, 1, n-1, n/2 };
+    const blas::size_t k_arr[] = { 0, 1, n-1, n/2, n/16 };
     const unsigned num_kvals = 
-        ( n <= 1 ) ? 1 : (
-        ( n == 2 ) ? 2 : (
-        ( n == 3 ) ? 3
-                    : 4 ));
+        ( n <= 1 )  ? 1 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 4
+                    : 5 )));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 1) {
@@ -429,7 +451,10 @@ void check_iamax_1inf(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 2 Infs
  * 
- * Inf locations: 1,2;   1,n/2;  1,n;   2,n/2;  2,n;  n/2,n.
+ * Inf locations: 0,1; 0,n/16;    0,n/2;    0,n-1;   
+ *                     1,n/16;    1,n/2;    1,n-1;
+ *                             n/16,n/2; n/16,n-1;
+ *                                        n/2,n-1.
  * 
  * @param[in] n
  *      Size of A.
@@ -451,12 +476,17 @@ void check_iamax_2infs(
             1, n-1,
             0, n/2,
             1, n/2,
-            n/2, n-1 };
+            n/2, n-1,
+            0, n/16,
+            1, n/16,
+            n/16, n/2,
+            n/16, n-1 };
     const unsigned num_kvals = 
-        ( n <= 1 ) ? 0 : (
-        ( n == 2 ) ? 2 : (
-        ( n == 3 ) ? 6
-                   : 12 ));
+        ( n <= 1 )  ? 0 : (
+        ( n == 2 )  ? 2 : (
+        ( n == 3 )  ? 6 : (
+        ( n < 32 )  ? 12
+                    : 20 )));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 2) {
@@ -484,7 +514,12 @@ void check_iamax_2infs(
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 3 Infs
  * 
- * Inf locations: 1,2,n/2;  1,2,n;  1,n/2,n;  2,n/2,n.
+ * Inf locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
+ *                          0,n/16,n/2; 0,n/16,n-1;
+ *                                       0,n/2,n-1;
+ *                1,n/16,n/2; 1,n/16,n-1;
+ *                            1,n-2,n-1;
+ *                n/16,n/2,n-1.
  * 
  * @param[in] n
  *      Size of A.
@@ -504,11 +539,18 @@ void check_iamax_3infs(
         = { 0, 1, n-1,
             0, 1, n/2,
             0, n/2, n-1,
-            1, n/2, n-1 };
+            1, n/2, n-1,
+            0, 1, n/16,
+            0, n/16, n/2,
+            0, n/16, n-1,
+            1, n/16, n/2,
+            1, n/16, n-1,
+            n/16, n/2, n-1 };
     const unsigned num_kvals = 
-        ( n <= 2 ) ? 0 : (
-        ( n == 3 ) ? 3
-                    : 12 );
+        ( n <= 2 )  ? 0 : (
+        ( n == 3 )  ? 3 : (
+        ( n < 32 )  ? 12
+                    : 30 ));
     
     // Tests
     for (unsigned i = 0; i < num_kvals; i += 3) {
