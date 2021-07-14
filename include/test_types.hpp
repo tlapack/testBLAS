@@ -34,6 +34,7 @@
 
 //-----------------------------------------------------------------------------
 #define TEST_CPLX_NAN { \
+    Complex( nan, nan), \
     Complex( nan, 0.0), \
     Complex( 0.0, nan), \
     Complex( inf, nan), \
@@ -42,6 +43,10 @@
     Complex( nan,-inf) }
     
 #define TEST_CPLX_INF { \
+    Complex( inf, inf), \
+    Complex( inf,-inf), \
+    Complex(-inf, inf), \
+    Complex(-inf,-inf), \
     Complex( inf, 0.0), \
     Complex( 0.0, inf), \
     Complex(-inf, 0.0), \
