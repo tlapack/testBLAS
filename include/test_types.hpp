@@ -31,6 +31,7 @@
 
 //-----------------------------------------------------------------------------
 #define TEST_TYPES TEST_REAL_TYPES, TEST_CPLX_TYPES
+#define TEST_STD_TYPES TEST_REAL_STD_TYPES, TEST_CPLX_STD_TYPES
 
 //-----------------------------------------------------------------------------
 #define TEST_CPLX_NAN { \

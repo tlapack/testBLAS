@@ -19,34 +19,6 @@
 using namespace blas;
 
 // -----------------------------------------------------------------------------
-// Auxiliary routines
-
-/**
- * @brief Set Ak = -k + i*k
- */
-template< typename real_t >
-inline void set_complexk( std::complex<real_t>& Ak, blas::size_t k ){
-    Ak = std::complex<real_t>( -k, k );
-}
-template< typename real_t >
-inline void set_complexk( real_t& Ak, blas::size_t k ){
-    static_assert( ! is_complex<real_t>::value, "real_t must be a Real type." );
-}
-
-/**
- * @brief Set Ak = OV * ((k+2)/(k+3)) * (1+i)
- */
-template< typename real_t >
-inline void set_complexOV( std::complex<real_t>& Ak, blas::size_t k ){
-    const real_t OV = std::numeric_limits<real_t>::max();
-    Ak = OV * (real_t)((k+2.)/(k+3.)) * std::complex<real_t>( 1, 1 );
-}
-template< typename real_t >
-inline void set_complexOV( real_t& Ak, blas::size_t k ){
-    static_assert( ! is_complex<real_t>::value, "real_t must be a Real type." );
-}
-
-// -----------------------------------------------------------------------------
 // Test cases for nrm2 with Infs and NaNs at specific positions
 
 /**
@@ -390,8 +362,6 @@ void check_nrm2_1inf(
             
             // No Infs
             CHECK( isinf( nrm2( n, A, 1 ) ) );
-            if( !isinf( nrm2( n, A, 1 ) ) )
-                WARN( nrm2( n, A, 1 ) );
 
             // Reset value
             A[k] = Ak;
@@ -500,13 +470,14 @@ void check_nrm2_3infs(
  * @brief Test case for nrm2 with arrays containing at least 1 NaN
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*k
- *  (2) A[k] = (-1)^k*Inf
- * and, for complex data type: 
- *  (3) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
- *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
- *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (1) A[k] = (-1)^k*x, where x^2 underflows but the norm is positive
+ *  (2) A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf
+ *  (3) A[k] = (-1)^k*x, where x^2 overflows but the norm is finite
+ *  (4) A[k] = x for k even, and A[k] = y for k odd. x^2 underflows and y^2 > 0 does not
+ *  (5) A[k] = x for k even, and A[k] = y for k odd. x^2 overflows and y^2 > 0 does not. The norm is finite and depends on x and y
+ *  (6) A[k] is finite and the correct output is infinite
+ *  (7) A[k] = (-1)^k*k
+ *  (8) A[k] = (-1)^k*Inf
  */
 TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
                     "[nrm2][BLASlv1][NaN]", TEST_TYPES ) {
@@ -514,7 +485,15 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
 
     // Constants
     const blas::size_t N = 128;       // N > 0
-    const TestType inf = std::numeric_limits<real_t>::infinity();
+    const real_t inf = std::numeric_limits<real_t>::infinity();
+    const real_t b = blas::blue_min<real_t>();
+    const real_t B = blas::blue_max<real_t>();
+    const real_t smallNum = b / 2;
+    const real_t bigNum   = B * 2;
+    const real_t hugeNum  = pow(
+        std::numeric_limits<real_t>::radix,
+        real_t(std::numeric_limits<real_t>::max_exponent-1)
+    );
 
     // Arrays
     const std::vector<blas::size_t> n_vec
@@ -522,6 +501,69 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
     TestType A[N];
 
     SECTION( "At least 1 NaN in the array A" ) {
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 underflows but the norm is positive" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
+            for (const auto& n : n_vec) {
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf" ) {
+            for (const auto& n : n_vec) {
+                if( n <= 1 ) continue;
+                const real_t Ak = bigNum / n;
+                for (blas::size_t k = 0; k < n; ++k)
+                    A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 overflows but the norm is finite" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
+            for (const auto& n : n_vec) {
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
+
+        WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. nrm2(A) == 5*b*sqrt(n)" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? b : -7*b;
+            for (const auto& n : n_vec) {
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
+
+        WHEN( "A[k] = 2*B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. nrm2(A) == 5*B*sqrt(n)" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? B : -7*B;
+            for (const auto& n : n_vec) {
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
+
+        WHEN( "A[k] is finite and the correct output is infinite" ) {
+            for (const auto& n : n_vec) {
+                if( n <= 1 ) continue;
+                for (blas::size_t k = 0; k < n; ++k)
+                    A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
+                check_nrm2_1nan( n, A );
+                check_nrm2_2nans( n, A );
+                check_nrm2_3nans( n, A );
+            }
+        }
 
         WHEN( "A[k] = (-1)^k*k" ) {
             for (blas::size_t k = 0; k < N; ++k)
@@ -542,57 +584,6 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
                 check_nrm2_3nans( n, A, false );
             }
         }
-
-        if (is_complex<TestType>::value) {
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
-                for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexk( A[k], k );
-                    else              set_complexOV( A[k], k );
-                }
-                for (const auto& n : n_vec) {
-                    check_nrm2_1nan( n, A );
-                    check_nrm2_2nans( n, A );
-                    check_nrm2_3nans( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
-                    else              set_complexk( A[k], k );
-                }
-                for (const auto& n : n_vec) {
-                    check_nrm2_1nan( n, A );
-                    check_nrm2_2nans( n, A );
-                    check_nrm2_3nans( n, A );
-                }
-            }
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complexk( A[k], k );
-                        else              set_complexOV( A[k], n-k );
-                    }
-                    check_nrm2_1nan( n, A );
-                    check_nrm2_2nans( n, A );
-                    check_nrm2_3nans( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
-                        else              set_complexk( A[k], k );
-                    }
-                    check_nrm2_1nan( n, A );
-                    check_nrm2_2nans( n, A );
-                    check_nrm2_3nans( n, A );
-                }
-            }
-        }
     }
 
     SECTION( "All NaNs" ) {
@@ -607,12 +598,13 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
  * @brief Test case for nrm2 with arrays containing at least 1 Inf and no NaNs
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*k
- * and, for complex data type: 
- *  (3) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
- *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
- *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (1) A[k] = (-1)^k*x, where x^2 underflows but the norm is positive
+ *  (2) A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf
+ *  (3) A[k] = (-1)^k*x, where x^2 overflows but the norm is finite
+ *  (4) A[k] = x for k even, and A[k] = y for k odd. x^2 underflows and y^2 > 0 does not
+ *  (5) A[k] = x for k even, and A[k] = y for k odd. x^2 overflows and y^2 > 0 does not. The norm is finite and depends on x and y
+ *  (6) A[k] is finite and the correct output is infinite
+ *  (7) A[k] = (-1)^k*k
  */
 TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no NaNs",
                     "[nrm2][BLASlv1][Inf]", TEST_TYPES ) {
@@ -620,7 +612,15 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
 
     // Constants
     const blas::size_t N = 128;       // N > 0
-    const TestType inf = std::numeric_limits<real_t>::infinity();
+    const real_t inf = std::numeric_limits<real_t>::infinity();
+    const real_t b = blas::blue_min<real_t>();
+    const real_t B = blas::blue_max<real_t>();
+    const real_t smallNum = b / 2;
+    const real_t bigNum   = B * 2;
+    const real_t hugeNum  = pow(
+        std::numeric_limits<real_t>::radix,
+        real_t(std::numeric_limits<real_t>::max_exponent-1)
+    );
 
     // Arrays
     const std::vector<blas::size_t> n_vec
@@ -628,6 +628,69 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
     TestType A[N];
 
     SECTION( "At least 1 Inf in the array A" ) {
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 underflows but the norm is positive" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
+            for (const auto& n : n_vec) {
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf" ) {
+            for (const auto& n : n_vec) {
+                if( n <= 1 ) continue;
+                const real_t Ak = bigNum / n;
+                for (blas::size_t k = 0; k < n; ++k)
+                    A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
+
+        WHEN( "A[k] = (-1)^k*x, where x^2 overflows but the norm is finite" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
+            for (const auto& n : n_vec) {
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
+
+        WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. nrm2(A) == 5*b*sqrt(n)" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? b : -7*b;
+            for (const auto& n : n_vec) {
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
+
+        WHEN( "A[k] = 2*B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. nrm2(A) == 5*B*sqrt(n)" ) {
+            for (blas::size_t k = 0; k < N; ++k)
+                A[k] = ( k % 2 == 0 ) ? B : -7*B;
+            for (const auto& n : n_vec) {
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
+
+        WHEN( "A[k] is finite and the correct output is infinite" ) {
+            for (const auto& n : n_vec) {
+                if( n <= 1 ) continue;
+                for (blas::size_t k = 0; k < n; ++k)
+                    A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
+                check_nrm2_1inf( n, A );
+                check_nrm2_2infs( n, A );
+                check_nrm2_3infs( n, A );
+            }
+        }
 
         WHEN( "A[k] = (-1)^k*k" ) {
             for (blas::size_t k = 0; k < N; ++k)
@@ -638,57 +701,6 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
                 check_nrm2_3infs( n, A );
             }
         }
-
-        if (is_complex<TestType>::value) {
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
-                for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexk( A[k], k );
-                    else              set_complexOV( A[k], k );
-                }
-                for (const auto& n : n_vec) {
-                    check_nrm2_1inf( n, A );
-                    check_nrm2_2infs( n, A );
-                    check_nrm2_3infs( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (blas::size_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
-                    else              set_complexk( A[k], k );
-                }
-                for (const auto& n : n_vec) {
-                    check_nrm2_1inf( n, A );
-                    check_nrm2_2infs( n, A );
-                    check_nrm2_3infs( n, A );
-                }
-            }
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complexk( A[k], k );
-                        else              set_complexOV( A[k], n-k );
-                    }
-                    check_nrm2_1inf( n, A );
-                    check_nrm2_2infs( n, A );
-                    check_nrm2_3infs( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
-                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
-                        else              set_complexk( A[k], k );
-                    }
-                    check_nrm2_1inf( n, A );
-                    check_nrm2_2infs( n, A );
-                    check_nrm2_3infs( n, A );
-                }
-            }
-        }
     }
 
     SECTION( "All Infs" ) {
@@ -696,5 +708,88 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
         for (const auto& n : n_vec)
             CHECK( isinf( nrm2( n, A, 1 ) ) );
+    }
+}
+
+/**
+ * @brief Test case for nrm2 with finite input which expects an exact output
+ * 
+ * Default entries:
+ *  (1) A[k] = (-1)^k*x, where x^2 underflows but the norm is positive
+ *  (2) A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf
+ *  (3) A[k] = (-1)^k*x, where x^2 overflows but the norm is finite
+ *  (4) A[k] = x for k even, and A[k] = y for k odd. x^2 underflows and y^2 > 0 does not
+ *  (5) A[k] = x for k even, and A[k] = y for k odd. x^2 overflows and y^2 > 0 does not. The norm is finite and depends on x and y
+ *  (6) A[k] is finite and the correct output is infinite
+ */
+TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
+                    "[nrm2][BLASlv1]", TEST_TYPES ) {
+    using real_t = real_type<TestType>;
+
+    // Constants
+    const blas::size_t N = 256;       // N > 0
+    const real_t b = blas::blue_min<real_t>();
+    const real_t B = blas::blue_max<real_t>();
+    const real_t smallNum = b / 2;
+    const real_t bigNum   = B * 2;
+    const real_t hugeNum  = pow(
+        std::numeric_limits<real_t>::radix,
+        real_t(std::numeric_limits<real_t>::max_exponent-1)
+    );
+
+    // Arrays
+    const std::vector<blas::size_t> n_vec
+        = { 1, 4, 16, 64, N }; // n_vec[i] > 0
+    TestType A[N];
+
+    WHEN( "A[k] = (-1)^k*x, where x^2 underflows but the norm is positive" ) {
+        for (blas::size_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
+        for (const auto& n : n_vec) 
+            CHECK( nrm2( n, A, 1 ) == smallNum * sqrt(n) );
+    }
+
+    WHEN( "A[k] = (-1)^k*x, where x^2 is finite but sum_k A[k]^2 = Inf" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            const real_t Ak = bigNum / n;
+            for (blas::size_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
+            CHECK( nrm2( n, A, 1 ) == bigNum / sqrt(n) );
+        }
+    }
+
+    WHEN( "A[k] = (-1)^k*x, where x^2 overflows but the norm is finite" ) {
+        for (blas::size_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
+        for (const auto& n : n_vec)
+            CHECK( nrm2( n, A, 1 ) == bigNum * sqrt(n) );
+    }
+
+    WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. nrm2(A) == 5*b*sqrt(n)" ) {
+        for (blas::size_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? b : -7*b;
+        for (const auto& n : n_vec) {
+            if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == b );
+            else          CHECK( nrm2( n, A, 1 ) == 5*b*sqrt(n) );
+        }
+    }
+
+    WHEN( "A[k] = 2*B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. nrm2(A) == 5*B*sqrt(n)" ) {
+        for (blas::size_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? B : -7*B;
+        for (const auto& n : n_vec) {
+            if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == B );
+            else          CHECK( nrm2( n, A, 1 ) == 5*B*sqrt(n) );
+        }
+    }
+
+    WHEN( "A[k] is finite and the correct output is infinite" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            for (blas::size_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
+            CHECK( isinf( nrm2( n, A, 1 ) ) );
+        }
     }
 }

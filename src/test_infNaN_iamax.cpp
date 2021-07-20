@@ -569,7 +569,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
                 for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
+                    for (blas::size_t k = 0; k < n; ++k) {
                         if ( k % 2 == 0 ) set_complexk( A[k], k );
                         else              set_complexOV( A[k], n-k );
                     }
@@ -581,7 +581,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
 
             WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
+                    for (blas::size_t k = 0; k < n; ++k) {
                         if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                         else              set_complexk( A[k], k );
                     }
@@ -665,7 +665,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1
 
             WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
                 for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
+                    for (blas::size_t k = 0; k < n; ++k) {
                         if ( k % 2 == 0 ) set_complexk( A[k], k );
                         else              set_complexOV( A[k], n-k );
                     }
@@ -677,7 +677,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1
 
             WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
                 for (const auto& n : n_vec) {
-                    for (blas::size_t k = 0; k < N; ++k) {
+                    for (blas::size_t k = 0; k < n; ++k) {
                         if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                         else              set_complexk( A[k], k );
                     }
@@ -744,7 +744,7 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
 
     WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
         for (const auto& n : n_vec) {
-            for (blas::size_t k = 0; k < N; ++k) {
+            for (blas::size_t k = 0; k < n; ++k) {
                 if ( k % 2 == 0 ) set_complexk( A[k], k );
                 else              set_complexOV( A[k], n-k );
             }
@@ -755,7 +755,7 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
 
     WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (const auto& n : n_vec) {
-            for (blas::size_t k = 0; k < N; ++k) {
+            for (blas::size_t k = 0; k < n; ++k) {
                 if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                 else              set_complexk( A[k], k );
             }

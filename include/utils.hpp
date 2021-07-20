@@ -44,7 +44,7 @@ inline void set_inf_vector(
     std::vector<real_t>& infVec )
 {
     const real_t inf = std::numeric_limits<real_t>::infinity();
-    infVec = std::vector<real_t>({ inf });
+    infVec = std::vector<real_t>({ inf, -inf });
 }
 
 /**
