@@ -116,12 +116,12 @@ inline void set_array_pairLocations(
 /**
  * @brief Set the trios of indexes for tests
  * 
- * Locations: 0,1,n/16; 0,1,n/2;    0,1,n-1;
+ * Locations: 0,1,n/16;    0,1,n/2;    0,1,n-1;
  *                      0,n/16,n/2; 0,n/16,n-1;
- *                                  0,n/2,n-1;
- *            1,n/16,n/2; 1,n/16,n-1;
- *                        1,n-2,n-1;
- *            n/16,n/2,n-1.
+ *                                   0,n/2,n-1;
+ *                      1,n/16,n/2; 1,n/16,n-1;
+ *                                  1,n/16,n-1;
+ *                                n/16,n/2,n-1.
  */
 template< typename int_t >
 inline void set_array_trioLocations(
