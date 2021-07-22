@@ -4,22 +4,15 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include <iostream>
-#include <tblas.hpp>
 #include "test_types.hpp"
 #include "utils.hpp"
 
 #include <catch2/catch.hpp>
 #include <limits>
+#include <iostream>
 
-/*
-#define BLAS_CHECK( cond ) do { \
-    bool cond_check = ( cond ); \
-    CHECK( cond_check ); \
-    if( !cond_check ) \
-        std::cout << x << std::endl; \
-} while(false)
-*/
+#include <tblas.hpp>
+using namespace blas;
 
 #ifdef TESTBLAS_PRINT_INPUT
     #define BLAS_CHECK( cond ) do { \
@@ -31,8 +24,6 @@
 #else
     #define BLAS_CHECK( cond ) CHECK( cond )
 #endif
-
-using namespace blas;
 
 TEMPLATE_TEST_CASE( "NANs work as expected", "[NaN]", TEST_TYPES ) {
     

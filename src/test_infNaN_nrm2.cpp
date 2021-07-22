@@ -1,5 +1,5 @@
 /// @file test_infNaN_nrm2.cpp
-/// @brief Test cases for nrm2 with NaNs, Infs and the overflow threshold (OV).
+/// @brief Test cases for nrm2 with NaNs, Infs and values whose under- or overflows when squared.
 //
 // Copyright (c) 2021, University of Colorado Denver. All rights reserved.
 //
