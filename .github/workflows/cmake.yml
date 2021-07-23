@@ -9,12 +9,14 @@ on:
     - '**CMakeLists.txt'
     - '**.cmake'
     - '**test_*'
+    - 'include/**'
   pull_request:
     paths:
     - '.github/workflows/cmake.yml'
     - '**CMakeLists.txt'
     - '**.cmake'
     - '**test_*'
+    - 'include/**'
 
 env:
   CXXFLAGS: "-Wall -pedantic"

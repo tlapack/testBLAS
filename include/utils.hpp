@@ -9,6 +9,7 @@
 
 #include "test_types.hpp"
 #include <vector>
+#include <limits>
 
 namespace testBLAS {
 
