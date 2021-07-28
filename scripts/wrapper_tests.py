@@ -91,7 +91,7 @@ print("""\
 #include <type_traits>
 #include <catch2/catch.hpp>
 #include <tblas.hpp>
-#include "test_types.hpp"
+#include "defines.hpp"
 
 #if defined(BLAS_ERROR_NDEBUG) || defined(NDEBUG)
     #define CHECK_BLAS_THROWS( expr, str ) \\

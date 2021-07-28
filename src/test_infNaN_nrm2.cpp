@@ -8,7 +8,7 @@
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
 #include <tblas.hpp>
-#include "test_types.hpp"
+#include "defines.hpp"
 #include "utils.hpp"
 
 #include <catch2/catch.hpp>

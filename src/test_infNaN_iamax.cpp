@@ -9,7 +9,7 @@
 
 #include <catch2/catch.hpp>
 #include <tblas.hpp>
-#include "test_types.hpp"
+#include "defines.hpp"
 #include "utils.hpp"
 
 #include <limits>

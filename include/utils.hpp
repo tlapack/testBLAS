@@ -7,7 +7,7 @@
 #ifndef __TESTBLAS_UTILS_HH__
 #define __TESTBLAS_UTILS_HH__
 
-#include "test_types.hpp"
+#include "defines.hpp"
 #include <vector>
 #include <limits>
 
