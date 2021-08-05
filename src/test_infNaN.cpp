@@ -71,6 +71,7 @@ TEMPLATE_TEST_CASE( "blas::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
 }
 
 TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES ) {
+    typedef real_type<TestType> real_t;
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
@@ -80,7 +81,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(std::abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
@@ -88,7 +89,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(std::abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
@@ -96,7 +97,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(std::abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
@@ -104,7 +105,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(std::abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }
@@ -112,7 +113,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            TestType y = abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
@@ -120,7 +121,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            TestType y = abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
@@ -128,7 +129,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            TestType y = abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
@@ -136,14 +137,14 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            TestType y = abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }
     }
 }
 
-TEMPLATE_TEST_CASE( "Complex division works as expected", "[NaN][Inf]", TEST_CPLX_TYPES ) {
+TEMPLATE_TEST_CASE( "Complex division works as expected", "[NaN][Inf]", TEST_TYPES ) {
     
     const TestType zero( 0.0 );
     const TestType one ( 1.0 );
@@ -177,10 +178,36 @@ TEMPLATE_TEST_CASE( "Complex division works as expected", "[NaN][Inf]", TEST_CPL
             CHECK( y == zero );
         }
     }
+
+    SECTION( "0.0 / Inf == 0.0" ) {
+        for (const auto& x : inf_vec) {
+            TestType y = zero / x;
+            INFO( "0.0 / " << x << " = " << y );
+            CHECK( y == zero );
+        }
+    }
+
+    if( is_complex<TestType>::value ) {
+    SECTION( "(1.0 + 1.0*I) / Inf == 0.0" ) {
+        for (const auto& x : inf_vec) {
+            complex_type<TestType> y = complex_type<TestType>(1.0,1.0) / x;
+            INFO( "(1.0 + 1.0*I) / " << x << " = " << y );
+            CHECK( y == zero );
+        }
+    }}
+
+    SECTION( "Inf / Inf == NaN" ) {
+        for (const auto& x : inf_vec) {
+            TestType y = x / x;
+            INFO( x << " / " << x << " = " << y );
+            CHECK( isnan(y) );
+        }
+    }
 }
 
 #ifdef USE_MPFR
-TEMPLATE_TEST_CASE( "mpfr::abs works as expected", "[NaN][Inf]", mpfr::mpreal ) {
+TEST_CASE( "mpfr::abs works as expected", "[NaN][Inf]" ) {
+    typedef mpfr::mpreal TestType;
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
@@ -204,7 +231,8 @@ TEMPLATE_TEST_CASE( "mpfr::abs works as expected", "[NaN][Inf]", mpfr::mpreal ) 
     }
 }
 TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]") {
-    using TestType = std::complex<mpfr::mpreal>;
+    typedef std::complex<mpfr::mpreal> TestType;
+    typedef mpfr::mpreal real_t;
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
@@ -214,7 +242,7 @@ TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]
 
     SECTION( "isnan(std::abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
@@ -222,7 +250,7 @@ TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]
 
     SECTION( "isinf(std::abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
@@ -230,7 +258,7 @@ TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]
 
     SECTION( "isinf(std::abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
@@ -238,7 +266,7 @@ TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]
 
     SECTION( "isnan(std::abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            TestType y = std::abs(x);
+            real_t y = std::abs(x);
             INFO( "std::abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }
