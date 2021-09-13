@@ -176,7 +176,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
                 param, value = [x.strip() for x in varAttrib.split('=', 1)]
                 for i, x in enumerate(args):
                     if x == param:
-                        if RepresentsFloat(value) and ("size_t" in ref_types[i]):
+                        if RepresentsFloat(value) and ("idx_t" in ref_types[i]):
                             if float(value) < 0:
                                 protect_sizet = True
                         args[i] = value
@@ -185,7 +185,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
             continue
         if protect_sizet:
             throwExceptionBuffer += """
-        if( std::is_signed<blas::size_t>::value )
+        if( std::is_signed<blas::idx_t>::value )
             CHECK_BLAS_THROWS( """ + f_name + "( " + ", ".join(args) + " ), \"" + throwStr + "\" );",
         else:
             throwExceptionBuffer += """
@@ -228,7 +228,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
                 param, value = [x.strip() for x in varAttrib.split('=', 1)]
                 for i, x in enumerate(args):
                     if x == param:
-                        if RepresentsFloat(value) and ("size_t" in ref_types[i]):
+                        if RepresentsFloat(value) and ("idx_t" in ref_types[i]):
                             if float(value) < 0:
                                 protect_sizet = True
                         args[i] = value
@@ -238,7 +238,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
 
         if protect_sizet:
             bufferRequireNoChanges += """
-    if( std::is_signed<blas::size_t>::value ) {
+    if( std::is_signed<blas::idx_t>::value ) {
     SECTION( \"""" + configStr + """\" ) {""" + refVarStr + """
         REQUIRE_NOTHROW( """ + f_name + "( " + ", ".join(args) + """ ) );
         CHECK( """ + noChangeStr + """ );""" + swapStr + """
@@ -265,7 +265,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "dot" or f_name == "dotu":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::size_t>::value )
+        if( std::is_signed<blas::idx_t>::value )
             CHECK( """+f_name+"""(-1, x, incx, y, incy ) == real_t(0) );
         CHECK( """+f_name+"""( 0, x, incx, y, incy ) == real_t(0) );
     }""",
@@ -273,7 +273,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "asum" or f_name == "nrm2":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::size_t>::value )
+        if( std::is_signed<blas::idx_t>::value )
             CHECK( """+f_name+"""(-1, x, incx ) == real_t(0) );
         CHECK( """+f_name+"""( 0, x, incx ) == real_t(0) );
     }""",
@@ -281,7 +281,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "iamax":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::size_t>::value )
+        if( std::is_signed<blas::idx_t>::value )
             CHECK( iamax(-1, x, incx ) == 0 );
         CHECK( iamax( 0, x, incx ) == 0 );
     }""",
