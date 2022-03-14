@@ -11,7 +11,7 @@
 #include <limits>
 #include <iostream>
 
-#include <tblas.hpp>
+#include <legacy_api/blas.hpp>
 using namespace blas;
 
 TEMPLATE_TEST_CASE( "NANs work as expected", "[NaN]", TEST_TYPES ) {

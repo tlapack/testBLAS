@@ -7,7 +7,7 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include <tblas.hpp>
+#include <legacy_api/blas.hpp>
 #include "defines.hpp"
 #include "utils.hpp"
 
@@ -42,7 +42,7 @@ using namespace blas;
  */
 template< typename TestType >
 void check_nrm2_1nan(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
 {
@@ -52,15 +52,15 @@ void check_nrm2_1nan(
     testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_locations( n, k_vec );
     
     // Tests
     for (const auto& k : k_vec) {
         const TestType Ak = A[k];
         
-        const blas::idx_t infIdx1 = (k > 0) ? 0 : 1;
-        const blas::idx_t infIdx2 = (k < n-1) ? n-1 : n-2;
+        const idx_t infIdx1 = (k > 0) ? 0 : 1;
+        const idx_t infIdx2 = (k < n-1) ? n-1 : n-2;
 
         for (const auto& aNAN : nan_vec) {
 
@@ -136,7 +136,7 @@ void check_nrm2_1nan(
  */
 template< typename TestType >
 void check_nrm2_2nans(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
 {
@@ -146,7 +146,7 @@ void check_nrm2_2nans(
     testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_pairLocations( n, k_vec );
     
     // Tests
@@ -157,11 +157,11 @@ void check_nrm2_2nans(
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         
-        const blas::idx_t infIdx1 =
+        const idx_t infIdx1 =
             (k1 > 0) ? 0 : (
             (k2 > 1) ? 1
                        : 2 );
-        const blas::idx_t infIdx2 =
+        const idx_t infIdx2 =
             (k2 < n-1) ? n-1 : (
             (k1 < n-2) ? n-2
                        : n-3 );
@@ -241,7 +241,7 @@ void check_nrm2_2nans(
  */
 template< typename TestType >
 void check_nrm2_3nans(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
 {
@@ -251,7 +251,7 @@ void check_nrm2_3nans(
     testBLAS::set_nan_vector( nan_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_trioLocations( n, k_vec );
     
     // Tests
@@ -264,11 +264,11 @@ void check_nrm2_3nans(
         const TestType Ak2 = A[k2];
         const TestType Ak3 = A[k3];
         
-        const blas::idx_t infIdx1 =
+        const idx_t infIdx1 =
             (k1 > 0) ? 0 : (
             (k2 > 1) ? 1
                         : 2 );
-        const blas::idx_t infIdx2 =
+        const idx_t infIdx2 =
             (k2 < n-1) ? n-1 : (
             (k1 < n-2) ? n-2
                         : n-3 );
@@ -341,14 +341,14 @@ void check_nrm2_3nans(
 
 template< typename TestType >
 void check_nrm2_1inf(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_locations( n, k_vec );
     
     // Tests
@@ -381,14 +381,14 @@ void check_nrm2_1inf(
  */
 template< typename TestType >
 void check_nrm2_2infs(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_pairLocations( n, k_vec );
     
     // Tests
@@ -426,14 +426,14 @@ void check_nrm2_2infs(
  */
 template< typename TestType >
 void check_nrm2_3infs(
-    const blas::idx_t n,
+    const idx_t n,
     TestType A[] )
 {    
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
         
     // Indexes for test
-    std::vector<blas::idx_t> k_vec;
+    std::vector<idx_t> k_vec;
     testBLAS::set_array_trioLocations( n, k_vec );
     
     // Tests
@@ -487,7 +487,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
     using real_t = real_type<TestType>;
 
     // Constants
-    const blas::idx_t N = 128;       // N > 0
+    const idx_t N = 128;       // N > 0
     const real_t inf = std::numeric_limits<real_t>::infinity();
     const real_t b = blas::blue_min<real_t>();
     const real_t B = blas::blue_max<real_t>();
@@ -501,14 +501,14 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
     );
 
     // Arrays
-    const std::vector<blas::idx_t> n_vec
+    const std::vector<idx_t> n_vec
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
     SECTION( "At least 1 NaN in the array A" ) {
 
         WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -518,7 +518,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -528,7 +528,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -541,7 +541,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
             for (const auto& n : n_vec) {
                 if( n <= 1 ) continue;
                 const real_t Ak = bigNum / n;
-                for (blas::idx_t k = 0; k < n; ++k)
+                for (idx_t k = 0; k < n; ++k)
                     A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
                 check_nrm2_1nan( n, A );
                 check_nrm2_2nans( n, A );
@@ -550,7 +550,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -560,7 +560,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? b : -7*b;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -570,7 +570,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? B : -7*B;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -582,7 +582,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
             for (const auto& n : n_vec) {
                 if( n <= 1 ) continue;
-                for (blas::idx_t k = 0; k < n; ++k)
+                for (idx_t k = 0; k < n; ++k)
                     A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
                 check_nrm2_1nan( n, A );
                 check_nrm2_2nans( n, A );
@@ -591,7 +591,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = (-1)^k*k" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? k : -k;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A );
@@ -601,7 +601,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
         }
 
         WHEN( "A[k] = (-1)^k*Inf" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? inf : -inf;
             for (const auto& n : n_vec) {
                 check_nrm2_1nan( n, A, false );
@@ -612,7 +612,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
     }
 
     SECTION( "All NaNs" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = NAN;
         for (const auto& n : n_vec)
             CHECK( isnan( nrm2( n, A, 1 ) ) );
@@ -639,7 +639,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
     using real_t = real_type<TestType>;
 
     // Constants
-    const blas::idx_t N = 128;       // N > 0
+    const idx_t N = 128;       // N > 0
     const real_t inf = std::numeric_limits<real_t>::infinity();
     const real_t b = blas::blue_min<real_t>();
     const real_t B = blas::blue_max<real_t>();
@@ -653,14 +653,14 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
     );
 
     // Arrays
-    const std::vector<blas::idx_t> n_vec
+    const std::vector<idx_t> n_vec
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
     SECTION( "At least 1 Inf in the array A" ) {
 
         WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -670,7 +670,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -680,7 +680,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -693,7 +693,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
             for (const auto& n : n_vec) {
                 if( n <= 1 ) continue;
                 const real_t Ak = bigNum / n;
-                for (blas::idx_t k = 0; k < n; ++k)
+                for (idx_t k = 0; k < n; ++k)
                     A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
                 check_nrm2_1inf( n, A );
                 check_nrm2_2infs( n, A );
@@ -702,7 +702,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -712,7 +712,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? b : -7*b;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -722,7 +722,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? B : -7*B;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -734,7 +734,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
             for (const auto& n : n_vec) {
                 if( n <= 1 ) continue;
-                for (blas::idx_t k = 0; k < n; ++k)
+                for (idx_t k = 0; k < n; ++k)
                     A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
                 check_nrm2_1inf( n, A );
                 check_nrm2_2infs( n, A );
@@ -743,7 +743,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
         }
 
         WHEN( "A[k] = (-1)^k*k" ) {
-            for (blas::idx_t k = 0; k < N; ++k)
+            for (idx_t k = 0; k < N; ++k)
                 A[k] = ( k % 2 == 0 ) ? k : -k;
             for (const auto& n : n_vec) {
                 check_nrm2_1inf( n, A );
@@ -754,7 +754,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
     }
 
     SECTION( "All Infs" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
         for (const auto& n : n_vec)
             CHECK( isinf( nrm2( n, A, 1 ) ) );
@@ -780,7 +780,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
     using real_t = real_type<TestType>;
 
     // Constants
-    const blas::idx_t N = 256;       // N > 0
+    const idx_t N = 256;       // N > 0
     const real_t b = blas::blue_min<real_t>();
     const real_t B = blas::blue_max<real_t>();
     const real_t tinyNum    = std::numeric_limits<real_t>::min();
@@ -793,26 +793,26 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
     );
 
     // Arrays
-    const std::vector<blas::idx_t> n_vec
+    const std::vector<idx_t> n_vec
         = { 1, 4, 16, 64, N }; // n_vec[i] > 0
     TestType A[N];
 
     WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
         for (const auto& n : n_vec) 
             CHECK( nrm2( n, A, 1 ) == smallNum * sqrt(n) );
     }
 
     WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
         for (const auto& n : n_vec) 
             CHECK( nrm2( n, A, 1 ) == tinyNum * sqrt(n) );
     }
 
     WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
         for (const auto& n : n_vec) 
             CHECK( nrm2( n, A, 1 ) == tiniestNum * sqrt(n) );
@@ -822,21 +822,21 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             const real_t Ak = bigNum / n;
-            for (blas::idx_t k = 0; k < n; ++k)
+            for (idx_t k = 0; k < n; ++k)
                 A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
             CHECK( nrm2( n, A, 1 ) == bigNum / sqrt(n) );
         }
     }
 
     WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
         for (const auto& n : n_vec)
             CHECK( nrm2( n, A, 1 ) == bigNum * sqrt(n) );
     }
 
     WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
             if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == b );
@@ -845,7 +845,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
     }
 
     WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
-        for (blas::idx_t k = 0; k < N; ++k)
+        for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
             if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == B );
@@ -856,7 +856,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
     WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
-            for (blas::idx_t k = 0; k < n; ++k)
+            for (idx_t k = 0; k < n; ++k)
                 A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
             CHECK( isinf( nrm2( n, A, 1 ) ) );
         }

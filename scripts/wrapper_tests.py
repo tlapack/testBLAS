@@ -90,7 +90,7 @@ print("""\
 
 #include <type_traits>
 #include <catch2/catch.hpp>
-#include <tblas.hpp>
+#include <legacy_api/blas.hpp>
 #include "defines.hpp"
 
 #if defined(BLAS_ERROR_NDEBUG) || defined(NDEBUG)
@@ -185,7 +185,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
             continue
         if protect_sizet:
             throwExceptionBuffer += """
-        if( std::is_signed<blas::idx_t>::value )
+        if( std::is_signed<idx_t>::value )
             CHECK_BLAS_THROWS( """ + f_name + "( " + ", ".join(args) + " ), \"" + throwStr + "\" );",
         else:
             throwExceptionBuffer += """
@@ -238,7 +238,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
 
         if protect_sizet:
             bufferRequireNoChanges += """
-    if( std::is_signed<blas::idx_t>::value ) {
+    if( std::is_signed<idx_t>::value ) {
     SECTION( \"""" + configStr + """\" ) {""" + refVarStr + """
         REQUIRE_NOTHROW( """ + f_name + "( " + ", ".join(args) + """ ) );
         CHECK( """ + noChangeStr + """ );""" + swapStr + """
@@ -265,7 +265,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "dot" or f_name == "dotu":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::idx_t>::value )
+        if( std::is_signed<idx_t>::value )
             CHECK( """+f_name+"""(-1, x, incx, y, incy ) == real_t(0) );
         CHECK( """+f_name+"""( 0, x, incx, y, incy ) == real_t(0) );
     }""",
@@ -273,7 +273,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "asum" or f_name == "nrm2":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::idx_t>::value )
+        if( std::is_signed<idx_t>::value )
             CHECK( """+f_name+"""(-1, x, incx ) == real_t(0) );
         CHECK( """+f_name+"""( 0, x, incx ) == real_t(0) );
     }""",
@@ -281,7 +281,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     elif f_name == "iamax":
         buffer += """
     SECTION ( "n <= 0" ) {
-        if( std::is_signed<blas::idx_t>::value )
+        if( std::is_signed<idx_t>::value )
             CHECK( iamax(-1, x, incx ) == 0 );
         CHECK( iamax( 0, x, incx ) == 0 );
     }""",
@@ -372,7 +372,12 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         REQUIRE_NOTHROW( """+f_name+"""( layout, uplo, trans, n, 0, alpha, A, lda, real_t(2), C, ldc ) );
         CHECK( C[0] == C11 );
         C[0] = C[1] = C[2] = C[3] = 1;
-    }""",
+    }
+    if (is_complex<TestType>::value) {
+    using complex_t = complex_type<TestType>;
+    SECTION( "Invalid complex case" ) {
+        CHECK_BLAS_THROWS( syrk( layout, uplo, Op('C'), n, k, alpha, A, lda, beta, C, ldc ), "trans" );
+    }}""",
         countCases += 1
     elif f_name == "syr2k":
         buffer += """
@@ -381,7 +386,12 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         REQUIRE_NOTHROW( """+f_name+"""( layout, uplo, trans, n, 0, alpha, A, lda, B, ldb, real_t(2), C, ldc ) );
         CHECK( C[0] == C11 );
         C[0] = C[1] = C[2] = C[3] = 1;
-    }""",
+    }
+    if (is_complex<TestType>::value) {
+    using complex_t = complex_type<TestType>;
+    SECTION( "Invalid complex case" ) {
+        CHECK_BLAS_THROWS( syr2k( layout, uplo, Op('C'), n, k, alpha, A, lda, B, ldb, beta, C, ldc ), "trans" );
+    }}""",
         countCases += 1
     elif f_name == "herk":
         buffer += """
@@ -397,6 +407,9 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         complex_t _C[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
         REQUIRE_NOTHROW( herk( layout, uplo, trans, 2, 2, alpha, A, 2, beta, _C, 2 ) );
         CHECK( (_C[0] == _C[0] && _C[1] == _C[1] && _C[2] == _C[2] && _C[3] == _C[3]) ); // i.e., they are not NaN
+    }
+    SECTION( "Invalid complex case" ) {
+        CHECK_BLAS_THROWS( herk( layout, uplo, Op('T'), n, k, alpha, A, lda, beta, C, ldc ), "trans" );
     }}""",
         countCases += 2
     elif f_name == "her2k":
@@ -413,6 +426,9 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         complex_t _C[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
         REQUIRE_NOTHROW( her2k( layout, uplo, trans, 2, 2, alpha, A, 2, B, 2, beta, _C, 2 ) );
         CHECK( (_C[0] == _C[0] && _C[1] == _C[1] && _C[2] == _C[2] && _C[3] == _C[3]) ); // i.e., they are not NaN
+    }
+    SECTION( "Invalid complex case" ) {
+        CHECK_BLAS_THROWS( her2k( layout, uplo, Op('T'), n, k, alpha, A, lda, B, ldb, beta, C, ldc ), "trans" );
     }}""",
         countCases += 2
     elif f_name == "hemm":
