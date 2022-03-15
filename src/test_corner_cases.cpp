@@ -1244,7 +1244,6 @@ TEMPLATE_TEST_CASE( "syr2k satisfies all corner cases", "[syr2k][BLASlv3]", TEST
         C[0] = C[1] = C[2] = C[3] = 1;
     }
     if (is_complex<TestType>::value) {
-    using complex_t = complex_type<TestType>;
     SECTION( "Invalid complex case" ) {
         CHECK_BLAS_THROWS( syr2k( layout, uplo, Op('C'), n, k, alpha, A, lda, B, ldb, beta, C, ldc ), "trans" );
     }}
@@ -1307,7 +1306,6 @@ TEMPLATE_TEST_CASE( "syrk satisfies all corner cases", "[syrk][BLASlv3]", TEST_T
         C[0] = C[1] = C[2] = C[3] = 1;
     }
     if (is_complex<TestType>::value) {
-    using complex_t = complex_type<TestType>;
     SECTION( "Invalid complex case" ) {
         CHECK_BLAS_THROWS( syrk( layout, uplo, Op('C'), n, k, alpha, A, lda, beta, C, ldc ), "trans" );
     }}
