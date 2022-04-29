@@ -11,12 +11,15 @@
 #include <legacy_api/blas.hpp>
 #include "defines.hpp"
 #include "utils.hpp"
+#ifdef USE_MPFR
+    #include <plugins/tlapack_mpreal.hpp>
+#endif
 
 #include <limits>
 #include <vector>
 #include <complex>
 
-using namespace blas;
+using namespace tlapack;
 
 // -----------------------------------------------------------------------------
 // Auxiliary routines
