@@ -10,13 +10,16 @@
 #include <legacy_api/blas.hpp>
 #include "defines.hpp"
 #include "utils.hpp"
+#ifdef USE_MPFR
+    #include <plugins/tlapack_mpreal.hpp>
+#endif
 
 #include <catch2/catch.hpp>
 #include <limits>
 #include <vector>
 #include <complex>
 
-using namespace blas;
+using namespace tlapack;
 
 // -----------------------------------------------------------------------------
 // Test cases for nrm2 with Infs and NaNs at specific positions
@@ -489,8 +492,8 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
     // Constants
     const idx_t N = 128;       // N > 0
     const real_t inf = std::numeric_limits<real_t>::infinity();
-    const real_t b = blas::blue_min<real_t>();
-    const real_t B = blas::blue_max<real_t>();
+    const real_t b = blue_min<real_t>();
+    const real_t B = blue_max<real_t>();
     const real_t tinyNum    = std::numeric_limits<real_t>::min();
     const real_t tiniestNum = std::numeric_limits<real_t>::denorm_min();
     const real_t smallNum   = b / 2;
@@ -641,8 +644,8 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no
     // Constants
     const idx_t N = 128;       // N > 0
     const real_t inf = std::numeric_limits<real_t>::infinity();
-    const real_t b = blas::blue_min<real_t>();
-    const real_t B = blas::blue_max<real_t>();
+    const real_t b = blue_min<real_t>();
+    const real_t B = blue_max<real_t>();
     const real_t tinyNum    = std::numeric_limits<real_t>::min();
     const real_t tiniestNum = std::numeric_limits<real_t>::denorm_min();
     const real_t smallNum   = b / 2;
@@ -781,8 +784,8 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
 
     // Constants
     const idx_t N = 256;       // N > 0
-    const real_t b = blas::blue_min<real_t>();
-    const real_t B = blas::blue_max<real_t>();
+    const real_t b = blue_min<real_t>();
+    const real_t B = blue_max<real_t>();
     const real_t tinyNum    = std::numeric_limits<real_t>::min();
     const real_t tiniestNum = std::numeric_limits<real_t>::denorm_min();
     const real_t smallNum   = b / 2;

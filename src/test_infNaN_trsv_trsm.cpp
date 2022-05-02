@@ -17,7 +17,10 @@
 #include <sstream>
 
 #include <legacy_api/blas.hpp>
-using namespace blas;
+#ifdef USE_MPFR
+    #include <plugins/tlapack_mpreal.hpp>
+#endif
+using namespace tlapack;
     
 // Constants
 const idx_t N        = 128; // Number of rows

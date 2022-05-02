@@ -12,7 +12,11 @@
 #include <iostream>
 
 #include <legacy_api/blas.hpp>
-using namespace blas;
+#ifdef USE_MPFR
+    #include <plugins/tlapack_mpreal.hpp>
+#endif
+
+using namespace tlapack;
 
 TEMPLATE_TEST_CASE( "NANs work as expected", "[NaN]", TEST_TYPES ) {
     
@@ -46,7 +50,7 @@ TEMPLATE_TEST_CASE( "Infs work as expected", "[Inf]", TEST_TYPES ) {
     }
 }
 
-TEMPLATE_TEST_CASE( "blas::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
+TEMPLATE_TEST_CASE( "tlapack::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
     
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
@@ -54,19 +58,19 @@ TEMPLATE_TEST_CASE( "blas::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
 
-    SECTION( "isnan(blas::abs(NAN)) == true" ) {
+    SECTION( "isnan(tlapack::abs(NAN)) == true" ) {
         for (const auto& x : nan_vec)
-            CHECK( isnan(blas::abs(x)) );
+            CHECK( isnan(tlapack::abs(x)) );
     }
 
-    SECTION( "isinf(blas::abs(Inf)) == true" ) {
+    SECTION( "isinf(tlapack::abs(Inf)) == true" ) {
         for (const auto& x : inf_vec)
-            CHECK( isinf(blas::abs(x)) );
+            CHECK( isinf(tlapack::abs(x)) );
     }
 
-    SECTION( "isinf(blas::abs(NAN)) == false" ) {
+    SECTION( "isinf(tlapack::abs(NAN)) == false" ) {
         for (const auto& x : nan_vec)
-            CHECK( !isinf(blas::abs(x)) );
+            CHECK( !isinf(tlapack::abs(x)) );
     }
 }
 

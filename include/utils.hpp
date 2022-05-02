@@ -13,6 +13,27 @@
 
 namespace testBLAS {
 
+// The following complex values have unspecified behavior in the C++ standard.
+//
+// Complex( inf, nan),
+// Complex( nan, inf),
+// Complex(-inf, nan),
+// Complex( nan,-inf)
+//
+// For instance, std::abs applied to std::complex<T>( Inf, NaN ) returns Inf
+// if T is either float, double, or long double. However, the same function
+// call returns a NaN if T is the multiprecision type mpfr::mpreal from
+// https://github.com/advanpix/mpreal. We obtain the same pattern for
+// (-Inf + NaN*i), (NaN + Inf*i) and (NaN - Inf*i).
+// Moreover, if T = mpfr::mpreal, std::abs returns a NaN for any of the inputs
+// (Inf + Inf*i), (-Inf + Inf*i), (Inf + Inf*i), (Inf - Inf*i), (Inf + 0*i),
+// and (0 - Inf*i). std::abs returns 0 for the input (0 + NaN*i).
+// 
+// Another curious operation is the complex division. For each of the standard
+// types, float, double and long double, the divisions ( 0 + 0*i )/( Inf + NaN*i ),
+// ( 0 + 0*i )/( -Inf + NaN*i ), ( 0 + 0*i )/( NaN + Inf*i ) and
+// ( 0 + 0*i )/( NaN - Inf*i ) all return ( 0 + 0*i ).
+
 /**
  * @brief Set the vector nanVec with NaNs for test
  */
@@ -32,9 +53,11 @@ inline void set_nan_vector(
     std::vector< std::complex<real_t> >& nanVec )
 {
     using Complex = std::complex<real_t>;
-    const real_t inf = std::numeric_limits<real_t>::infinity();
     const real_t nan = std::numeric_limits<real_t>::quiet_NaN();
-    nanVec = std::vector< Complex >( TEST_CPLX_NAN );
+    nanVec = std::vector< Complex >( {
+        Complex( nan, nan),
+        Complex( nan,  0 ),
+        Complex(  0 , nan) } );
 }
 
 /**
@@ -57,7 +80,15 @@ inline void set_inf_vector(
 {
     using Complex = std::complex<real_t>;
     const real_t inf = std::numeric_limits<real_t>::infinity();
-    infVec = std::vector< Complex >( TEST_CPLX_INF );
+    infVec = std::vector< Complex >( {
+        Complex( inf, inf),
+        Complex( inf,-inf),
+        Complex(-inf, inf),
+        Complex(-inf,-inf),
+        Complex( inf,  0 ),
+        Complex(  0 , inf),
+        Complex(-inf,  0 ),
+        Complex(  0 ,-inf) } );
 }
 
 /**

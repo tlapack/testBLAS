@@ -14,6 +14,9 @@
 #include <catch2/catch.hpp>
 #include <legacy_api/blas.hpp>
 #include "defines.hpp"
+#ifdef USE_MPFR
+    #include <plugins/tlapack_mpreal.hpp>
+#endif
 
 #if defined(BLAS_ERROR_NDEBUG) || defined(NDEBUG)
     #define CHECK_BLAS_THROWS( expr, str ) \
@@ -28,7 +31,7 @@
     #endif
 #endif
 
-using namespace blas;
+using namespace tlapack;
 
 TEMPLATE_TEST_CASE( "asum satisfies all corner cases", "[asum][BLASlv1]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
@@ -1121,7 +1124,7 @@ TEMPLATE_TEST_CASE( "herk satisfies all corner cases", "[herk][BLASlv3]", TEST_T
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of C is zero" ) {
         complex_t _C[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( herk( layout, uplo, trans, 2, 2, alpha, A, 2, beta, _C, 2 ) );
+        REQUIRE_NOTHROW( herk( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, beta, _C, 2 ) );
         CHECK( (_C[0] == _C[0] && _C[1] == _C[1] && _C[2] == _C[2] && _C[3] == _C[3]) ); // i.e., they are not NaN
     }
     SECTION( "Invalid complex case" ) {
