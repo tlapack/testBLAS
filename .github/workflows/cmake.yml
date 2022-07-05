@@ -63,7 +63,6 @@ jobs:
     - name: Build and install <T>LAPACK
       working-directory: ${{env.tlapack_DIR}}
       run: |
-        mkdir build
         cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
@@ -92,6 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       blaspp_DIR: ${{github.workspace}}/blaspp
+      lapackpp_DIR: ${{github.workspace}}/lapackpp
     
     steps:
     
@@ -107,15 +107,23 @@ jobs:
     - name: Install Reference BLAS
       run: sudo apt install libblas-dev
 
-    - name: Checkout BLAS++
-      run: git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
+    - name: Checkout BLAS++ and LAPACK++
+      run: |
+        git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
+        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
 
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
         git checkout tlapack
-        mkdir build
-        cmake -Bbuild -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
+        cmake -B build -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
+        cmake --build build --target install
+
+    - name: Build and install LAPACK++
+      working-directory: ${{env.lapackpp_DIR}}
+      run: |
+        git checkout tlapack
+        cmake -B build -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
         cmake --build build --target install
 
     - name: Checkout <T>LAPACK
@@ -127,8 +135,7 @@ jobs:
     - name: Build and install <T>LAPACK
       working-directory: ${{env.tlapack_DIR}}
       run: |
-        mkdir build
-        cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_BLASPP_WRAPPERS=ON -Dblaspp_DIR=${{env.blaspp_DIR}} -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+        cmake -Bbuild -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
     - name: Configure testBLAS
@@ -145,25 +152,7 @@ jobs:
       run: cmake --build build --config ${{env.BUILD_TYPE}}
 
     # Mind that the job won't fail if only this step fails
-    - name: Test INF and NAN propagation in iamax
+    - name: Run tests
       working-directory: ${{github.workspace}}/build
       continue-on-error: true
-      run: |
-        echo "Mind that the job won't fail because of this step."
-        ./tester -# [#test_infNaN_iamax] -r compact
-
-    # Mind that the job won't fail if only this step fails
-    - name: Test INF and NAN propagation in nrm2
-      working-directory: ${{github.workspace}}/build
-      continue-on-error: true
-      run: |
-        echo "Mind that the job won't fail because of this step."
-        ./tester -# [#test_infNaN_nrm2] -r compact
-
-    # Mind that the job won't fail if only this step fails
-    - name: Test Corner Cases
-      working-directory: ${{github.workspace}}/build
-      continue-on-error: true
-      run: |
-        echo "Mind that the job won't fail because of this step."
-        ./tester -# [#test_corner_cases] -r compact
+      run: ${{github.workspace}}/build/tester
