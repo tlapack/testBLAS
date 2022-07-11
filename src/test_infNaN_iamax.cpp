@@ -509,7 +509,7 @@ void check_iamax_3infs(
  *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
  *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
  */
-TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1 NaN",
+TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN",
                     "[iamax][BLASlv1][NaN]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
 
@@ -615,7 +615,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for real arrays with at least 1
  *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
  *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
  */
-TEMPLATE_TEST_CASE( "iamax returns the first Inf for real arrays with at least 1 Inf and no NaNs",
+TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf and no NaNs",
                     "[iamax][BLASlv1][Inf]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
 

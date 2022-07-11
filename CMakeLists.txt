@@ -155,6 +155,7 @@ if( NOT TARGET tester )
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" )
 
   # Add tests to CTest
+  include(CTest)
   include(Catch)
   catch_discover_tests(tester)
 

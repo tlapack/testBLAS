@@ -485,7 +485,7 @@ void check_nrm2_3infs(
  *  (9) A[k] = (-1)^k*k
  *  (10) A[k]= (-1)^k*Inf
  */
-TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
+TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
                     "[nrm2][BLASlv1][NaN]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
 
@@ -637,7 +637,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for real arrays with at least 1 NaN",
  *  (8) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
  *  (9) A[k] = (-1)^k*k
  */
-TEMPLATE_TEST_CASE( "nrm2 returns Inf for real arrays with at least 1 Inf and no NaNs",
+TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs",
                     "[nrm2][BLASlv1][Inf]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
 
