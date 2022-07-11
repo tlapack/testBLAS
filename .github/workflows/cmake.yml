@@ -156,3 +156,89 @@ jobs:
       working-directory: ${{github.workspace}}/build
       continue-on-error: true
       run: ${{github.workspace}}/build/tester
+
+  test-mkl:
+    runs-on: ubuntu-latest
+    env:
+      blaspp_DIR: ${{github.workspace}}/blaspp
+      lapackpp_DIR: ${{github.workspace}}/lapackpp
+    
+    steps:
+
+    - name: Intel Apt repository
+      timeout-minutes: 1
+      run: |
+        # download the key to system keyring
+        wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+        # add signed entry to apt sources and configure the APT client to use Intel repository:
+        echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt update
+        
+    - name: Install Intel oneAPI
+      timeout-minutes: 5
+      run: sudo apt install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mkl
+
+    - name: Checkout Catch2
+      uses: actions/checkout@v2
+      with:
+        repository: catchorg/Catch2
+        path: Catch2
+    
+    - name: Checkout testBLAS
+      uses: actions/checkout@v2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@v3
+
+    - name: Setup Intel oneAPI environment
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        printenv >> $GITHUB_ENV
+
+    - name: Checkout BLAS++ and LAPACK++
+      run: |
+        git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
+        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
+
+    - name: Build and install BLAS++
+      working-directory: ${{env.blaspp_DIR}}
+      run: |
+        git checkout tlapack
+        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
+        cmake --build build --target install
+
+    - name: Build and install LAPACK++
+      working-directory: ${{env.lapackpp_DIR}}
+      run: |
+        git checkout tlapack
+        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
+        cmake --build build --target install
+
+    - name: Checkout <T>LAPACK
+      uses: actions/checkout@v2
+      with:
+        repository: tlapack/tlapack
+        path: tlapack
+
+    - name: Build and install <T>LAPACK
+      working-directory: ${{env.tlapack_DIR}}
+      run: |
+        cmake -B build -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+        cmake --build build --target install
+
+    - name: Configure testBLAS
+      run: >
+        cmake -B build
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -D Catch2_DIR=${{env.Catch2_DIR}}
+        -D tlapack_DIR=${{env.tlapack_DIR}}
+
+    - name: Build testBLAS
+      # Build your program with the given configuration
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+
+    # Mind that the job won't fail if only this step fails
+    - name: Run tests
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: ${{github.workspace}}/build/tester
