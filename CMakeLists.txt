@@ -38,67 +38,8 @@ if( NOT TARGET tlapack )
 endif()
 
 # Load Catch2
-find_package( Catch2 QUIET HINTS ${Catch2_DIR} ) # Try to load Catch2 from the system
-if( NOT Catch2_FOUND )
-
-  if  ( EXISTS "${Catch2_DIR}/include/catch.hpp" )
-
-    add_subdirectory( ${Catch2_DIR} ${CMAKE_CURRENT_BINARY_DIR}/Catch2 )
-    message( STATUS "Using Catch2 from ${Catch2_DIR}" )
-
-    # Add folder with Catch.cmake to the CMAKE_MODULE_PATH
-    set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${Catch2_DIR}/extras;${Catch2_DIR}/contrib" )
-
-  elseif( EXISTS "$ENV{Catch2_DIR}/include/catch.hpp" )
-
-    get_property( docString CACHE Catch2_DIR PROPERTY HELPSTRING )
-    set( Catch2_DIR $ENV{Catch2_DIR} CACHE STRING "${docString}" FORCE )
-    add_subdirectory( ${Catch2_DIR} ${CMAKE_CURRENT_BINARY_DIR}/Catch2 )
-    message( STATUS "Using Catch2 from ${Catch2_DIR}" )
-
-    # Add folder with Catch.cmake to the CMAKE_MODULE_PATH
-    set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${Catch2_DIR}/extras;${Catch2_DIR}/contrib" )
-
-  elseif( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14" )
-
-    message( STATUS "Catch2 not found. Trying to fetch from https://github.com/catchorg/Catch2.git. "
-                    "It may take a while." )
-
-    include(FetchContent)
-    FetchContent_Declare(
-      Catch2
-      GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-      GIT_TAG        v2.13.1 )
-
-    FetchContent_MakeAvailable(Catch2)
-
-    # Add folder with Catch.cmake to the CMAKE_MODULE_PATH
-    set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${Catch2_SOURCE_DIR}/extras;${Catch2_SOURCE_DIR}/contrib" )
-
-    # Test if the fetch was successful
-    if( EXISTS "${Catch2_SOURCE_DIR}/include/catch.hpp" )
-      message( STATUS "Using Catch2 from https://github.com/catchorg/Catch2.git." )
-    else()
-      message( FATAL_ERROR "Failed in fetching Catch2 from https://github.com/catchorg/Catch2.git." )
-    endif()
-
-    # Hide Catch2_DIR, CATCH_ and FETCHCONTENT_ options
-    mark_as_advanced( FORCE Catch2_DIR )
-    get_cmake_property(_variableNames VARIABLES)
-    foreach (_variableName ${_variableNames})
-      if( "${_variableName}" MATCHES "^CATCH_" OR
-          "${_variableName}" MATCHES "^FETCHCONTENT_" )
-        mark_as_advanced( FORCE ${_variableName} )
-      endif()
-    endforeach()
-
-  else()
-    message( FATAL_ERROR "Catch2 not found. Set \"Catch2_DIR\" to a directory containing either
-    (1) \"include/catch.hpp\",
- or (2) one of the files: Catch2Config.cmake, catch2-config.cmake." )
-  endif()
-
-endif( NOT Catch2_FOUND )
+include( "${testBLAS_SOURCE_DIR}/cmake/FetchPackage.cmake" )
+FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "devel" )
 
 # Search for MPFR library if TEST_MPFR = ON
 if( TEST_MPFR )
@@ -139,10 +80,10 @@ file( GLOB test_sources
 
 if( NOT TARGET tester )
 
-  add_executable( tester tests_main.cpp ${test_sources} )
+  add_executable( tester ${test_sources} )
 
   target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-  target_link_libraries( tester PRIVATE Catch2::Catch2 tblas )
+  target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tblas )
 
   if( TEST_MPFR )
     target_compile_definitions( tester PRIVATE USE_MPFR )

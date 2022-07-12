@@ -11,7 +11,7 @@
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
 #include <type_traits>
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <legacy_api/blas.hpp>
 #include "defines.hpp"
 #ifdef USE_MPFR

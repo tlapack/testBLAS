@@ -7,7 +7,7 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <legacy_api/blas.hpp>
 #include "defines.hpp"
 #include "utils.hpp"
