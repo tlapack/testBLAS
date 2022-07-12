@@ -40,6 +40,7 @@ endif()
 # Load Catch2
 include( "${testBLAS_SOURCE_DIR}/cmake/FetchPackage.cmake" )
 FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "devel" )
+list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras" )
 
 # Search for MPFR library if TEST_MPFR = ON
 if( TEST_MPFR )
