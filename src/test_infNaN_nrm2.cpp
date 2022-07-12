@@ -14,7 +14,7 @@
     #include <plugins/tlapack_mpreal.hpp>
 #endif
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 #include <limits>
 #include <vector>
 #include <complex>
