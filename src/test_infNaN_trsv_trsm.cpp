@@ -38,9 +38,9 @@ const float sparsity        = .75;  // Approximate percentage of zeros in the da
  *  1) generate random T (upper or lower triangular) with small integer entries,
         and with 1, and perhaps 2, 4, ... along the diagonal (to avoid roundoff)
     2) generate a random sparse x also with small integer entries
-    3) let b = T*x (no roundoff)
-    4) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
+    3) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
         to zero entries in x
+    4) solve x := T^{-1} * x
     5) test whether NaNs appear in x (at least) in the same rows that NaNs and Infs
         appear in T.
  */
@@ -100,6 +100,10 @@ TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to
             for (idx_t i = 0; i < (idx_t) floor(n*(1-sparsity)); ++i)
                 x[ rand() % n ] = max( one, real_t(rand() % max_int) );
 
+            // Copy x into b
+            for (idx_t i = 0; i < n; ++i)
+                b[i] = x[i];
+
             // Put Infs and NaNs in the columns of T respective to the 0s in x
             // Only set NaNs in the diagonal 
             for (idx_t j = 0; j < n; ++j) {
@@ -152,11 +156,11 @@ TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to
  * 
  *  1) generate random T (upper or lower triangular) with small integer entries,
         and with 1, and perhaps 2, 4, ... along the diagonal (to avoid roundoff)
-    2) generate a random sparse x also with small integer entries
-    3) let b = T*x (no roundoff)
-    4) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
-        to zero entries in x
-    5) test whether NaNs appear in x (at least) in the same rows that NaNs and Infs
+    2) generate a random sparse X also with small integer entries
+    3) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
+        to zero entries in X
+    4) solve X := T^{-1} * X
+    5) test whether NaNs appear in X (at least) in the same rows that NaNs and Infs
         appear in T.
  */
 TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to the solution",
