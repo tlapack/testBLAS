@@ -39,7 +39,7 @@ endif()
 
 # Load Catch2
 include( "${testBLAS_SOURCE_DIR}/cmake/FetchPackage.cmake" )
-FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "devel" )
+FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "v3.0.1" )
 if( EXISTS "${Catch2_SOURCE_DIR}" )
   list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
 else()
