@@ -40,7 +40,11 @@ endif()
 # Load Catch2
 include( "${testBLAS_SOURCE_DIR}/cmake/FetchPackage.cmake" )
 FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "devel" )
-list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras" )
+if( EXISTS "${Catch2_SOURCE_DIR}" )
+  list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
+else()
+  list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
+endif()
 
 # Search for MPFR library if TEST_MPFR = ON
 if( TEST_MPFR )
@@ -79,38 +83,18 @@ file( GLOB test_sources
 #-------------------------------------------------------------------------------
 # tester: Program for tests
 
-if( NOT TARGET tester )
+add_executable( tester ${test_sources} )
 
-  add_executable( tester ${test_sources} )
+target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tblas )
 
-  target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-  target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tblas )
-
-  if( TEST_MPFR )
-    target_compile_definitions( tester PRIVATE USE_MPFR )
-    target_include_directories( tester PRIVATE ${MPFR_INCLUDES} ${GMP_INCLUDES} )
-    target_link_libraries( tester PRIVATE ${MPFR_LIBRARIES} ${GMP_LIBRARIES} )
-  endif()
-
-  set_target_properties( tester
-  PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}" )
-
-  # Add tests to CTest
-  include(CTest)
-  include(Catch)
-  catch_discover_tests(tester)
-
-else()
-
-  if( TARGET tester )
-    target_sources( tester PRIVATE ${test_sources} )
-    target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-
-    if( TEST_MPFR )
-      target_compile_definitions( tester PRIVATE USE_MPFR )
-      target_include_directories( tester PRIVATE ${MPFR_INCLUDES} ${GMP_INCLUDES} )
-    endif()
-  endif()
-
+if( TEST_MPFR )
+  target_compile_definitions( tester PRIVATE USE_MPFR )
+  target_include_directories( tester PRIVATE ${MPFR_INCLUDES} ${GMP_INCLUDES} )
+  target_link_libraries( tester PRIVATE ${MPFR_LIBRARIES} ${GMP_LIBRARIES} )
 endif()
+
+# Add tests to CTest
+include(CTest)
+include(Catch)
+catch_discover_tests(tester)
