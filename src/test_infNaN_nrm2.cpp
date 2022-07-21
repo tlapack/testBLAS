@@ -15,6 +15,7 @@
 #endif
 
 #include <catch2/catch_template_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
 #include <limits>
 #include <vector>
 #include <complex>
@@ -23,6 +24,66 @@ using namespace tlapack;
 
 // -----------------------------------------------------------------------------
 // Test cases for nrm2 with Infs and NaNs at specific positions
+
+template< typename TestType >
+void check_nrm2_nans_and_infs(
+    const idx_t n,
+    TestType A[],
+    const idx_t nNaNs,
+    const idx_t infLocs[] )
+{
+    using real_t = real_type<TestType>;
+    
+    const real_t Inf = std::numeric_limits<real_t>::infinity();
+    const std::vector<real_t> Infs = { -Inf, Inf };
+
+    if( n > nNaNs ) {
+
+        // 1 Inf, note that (i < n-nNaNs) prevents duplicates when n == nNaNs+1
+        for(idx_t i=0; (i < 2) && (i < n-nNaNs); ++i) {
+            
+            const idx_t infLoc = infLocs[i];
+            const TestType Ai = A[ infLoc ];
+            
+            for( const real_t& inf : Infs ) {
+
+                // Inf in A[infLoc]
+                A[ infLoc ] = inf;
+                INFO( "A[" << infLoc << "] = " << A[infLoc] );
+                CHECK( isnan( nrm2( n, A, 1 ) ) );
+                                            
+            }
+
+            // Reset value
+            A[ infLoc ] = Ai;
+        }
+
+        // 2 Infs
+        if( n > nNaNs+1 ) {
+
+            const TestType A0 = A[ infLocs[0] ];
+            const TestType A1 = A[ infLocs[1] ];
+
+            for( const real_t& inf0 : Infs )
+            for( const real_t& inf1 : Infs ) {
+
+                // Inf in A[infLocs[0]]
+                A[ infLocs[0] ] = inf0;
+                INFO( "A[" << infLocs[0] << "] = " << A[infLocs[0]] );
+
+                // Inf in A[infLocs[1]]
+                A[ infLocs[1] ] = inf1;
+                INFO( "A[" << infLocs[1] << "] = " << A[infLocs[1]] );
+
+                CHECK( isnan( nrm2( n, A, 1 ) ) );
+            }
+
+            // Reset value
+            A[ infLocs[0] ] = A0;
+            A[ infLocs[1] ] = A1;
+        }
+    }
+}
 
 /**
  * @brief Check if nrm2( n, A, 1 ) works as expected using exactly 1 NaN
@@ -48,9 +109,7 @@ void check_nrm2_1nan(
     const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
-{
-    using real_t = real_type<TestType>;
-    
+{    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -60,61 +119,29 @@ void check_nrm2_1nan(
     
     // Tests
     for (const auto& k : k_vec) {
-        const TestType Ak = A[k];
         
-        const idx_t infIdx1 = (k > 0) ? 0 : 1;
-        const idx_t infIdx2 = (k < n-1) ? n-1 : n-2;
+        const TestType Ak = A[k];
+
+        const idx_t infLocs[] = {
+            idx_t( (k > 0) ? 0 : 1 ),
+            idx_t( (k < n-1) ? n-1 : n-2 )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaN in A[k]
             A[k] = aNAN;
-            
-            // No Infs
+            INFO( "A[" << k << "] = " << A[k] );
+
+            UNSCOPED_INFO( "No Infs" );
             CHECK( isnan( nrm2( n, A, 1 ) ) );
 
-            if( checkWithInf && n > 1 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-
-                if( n > 2 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset value
-            A[k] = Ak;
+            if( checkWithInf )
+                check_nrm2_nans_and_infs( n, A, 1, infLocs );
         }
+
+        // Reset value
+        A[k] = Ak;
     }
 }
 
@@ -142,9 +169,7 @@ void check_nrm2_2nans(
     const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
-{
-    using real_t = real_type<TestType>;
-    
+{    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -159,67 +184,29 @@ void check_nrm2_2nans(
         const auto& k2 = k_vec[i+1];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
-        
-        const idx_t infIdx1 =
-            (k1 > 0) ? 0 : (
-            (k2 > 1) ? 1
-                       : 2 );
-        const idx_t infIdx2 =
-            (k2 < n-1) ? n-1 : (
-            (k1 < n-2) ? n-2
-                       : n-3 );
+
+        const idx_t infLocs[] = {
+            idx_t( (k1 > 0) ? 0 : ((k2 > 1) ? 1 : 2 ) ),
+            idx_t( (k2 < n-1) ? n-1 : ((k1 < n-2) ? n-2 : n-3 ) )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaNs in A[k1] and A[k2]
             A[k1] = A[k2] = aNAN;
-            
-            // No Infs
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+
+            UNSCOPED_INFO( "No Infs" );
             CHECK( isnan( nrm2( n, A, 1 ) ) );
 
-            if( checkWithInf && n > 2 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-
-                if( n > 3 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
+            if( checkWithInf )
+                check_nrm2_nans_and_infs( n, A, 2, infLocs );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
     }
 }
 
@@ -247,9 +234,7 @@ void check_nrm2_3nans(
     const idx_t n,
     TestType A[],
     const bool checkWithInf = true )
-{
-    using real_t = real_type<TestType>;
-    
+{    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -266,68 +251,35 @@ void check_nrm2_3nans(
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         const TestType Ak3 = A[k3];
-        
-        const idx_t infIdx1 =
-            (k1 > 0) ? 0 : (
-            (k2 > 1) ? 1
-                        : 2 );
-        const idx_t infIdx2 =
-            (k2 < n-1) ? n-1 : (
-            (k1 < n-2) ? n-2
-                        : n-3 );
+
+        const idx_t infLocs[] = {
+            idx_t(  (k1 > 0)    ? 0 : (
+                    (k2 > 1)    ? 1
+                                : 2 ) ),
+            idx_t(  (k2 < n-1)  ? n-1 : (
+                    (k1 < n-2)  ? n-2
+                                : n-3 ) )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaNs in A[k1], A[k2] and A[k3]
             A[k1] = A[k2] = A[k3] = aNAN;
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+            INFO( "A[" << k3 << "] = " << A[k3] );
         
-            // No Infs
+            UNSCOPED_INFO( "No Infs" );
             CHECK( isnan( nrm2( n, A, 1 ) ) );
 
-            if( checkWithInf && n > 3 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( isnan( nrm2( n, A, 1 ) ) );
-
-                if( n > 4 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( isnan( nrm2( n, A, 1 ) ) );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
-            A[k3] = Ak3;
+            if( checkWithInf )
+                check_nrm2_nans_and_infs( n, A, 3, infLocs );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
+        A[k3] = Ak3;
     }
 }
 
@@ -356,19 +308,22 @@ void check_nrm2_1inf(
     
     // Tests
     for (const auto& k : k_vec) {
+
         const TestType Ak = A[k];
 
         for (const auto& aInf : inf_vec) {
 
             // (-1)^k*Inf in A[k]
             A[k] = ( k % 2 == 0 ) ? aInf : -aInf;
-            
-            // No Infs
-            CHECK( isinf( nrm2( n, A, 1 ) ) );
+            INFO( "A[" << k << "] = " << A[k] );
 
-            // Reset value
-            A[k] = Ak;
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "nrm2ofA = " << nrm2ofA );
+            CHECK( isinf( nrm2ofA ) );
         }
+
+        // Reset value
+        A[k] = Ak;
     }
 }
 
@@ -407,13 +362,17 @@ void check_nrm2_2infs(
             // (-1)^k*Inf in A[k]
             A[k1] = ( k1 % 2 == 0 ) ? aInf : -aInf;
             A[k2] = ( k2 % 2 == 0 ) ? aInf : -aInf;
-            
-            CHECK( isinf( nrm2( n, A, 1 ) ) );
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
 
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "nrm2ofA = " << nrm2ofA );
+            CHECK( isinf( nrm2ofA ) );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
     }
 }
 
@@ -455,14 +414,19 @@ void check_nrm2_3infs(
             A[k1] = ( k1 % 2 == 0 ) ? aInf : -aInf;
             A[k2] = ( k2 % 2 == 0 ) ? aInf : -aInf;
             A[k3] = ( k3 % 2 == 0 ) ? aInf : -aInf;
-            
-            CHECK( isinf( nrm2( n, A, 1 ) ) );
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+            INFO( "A[" << k3 << "] = " << A[k3] );
 
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
-            A[k3] = Ak3;
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "nrm2ofA = " << nrm2ofA );
+            CHECK( isinf( nrm2ofA ) );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
+        A[k3] = Ak3;
     }
 }
 
@@ -477,7 +441,7 @@ void check_nrm2_3infs(
  *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
  *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows
+ *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
  *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
  *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
  *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
@@ -486,7 +450,7 @@ void check_nrm2_3infs(
  *  (10) A[k]= (-1)^k*Inf
  */
 TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
-                    "[nrm2][BLASlv1][NaN]", TEST_TYPES ) {
+                    "[nrm2][BLASlv1][NaN][Inf]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
 
     // Constants
@@ -508,117 +472,126 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "At least 1 NaN in the array A" ) {
-
-        WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows" ) {
-            for (const auto& n : n_vec) {
-                if( n <= 1 ) continue;
-                const real_t Ak = bigNum / n;
-                for (idx_t k = 0; k < n; ++k)
-                    A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            INFO( "n = " << n );
+            const real_t Ak = bigNum / n;
+            for (idx_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? b : -7*b;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? b : -7*b;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? B : -7*B;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? B : -7*B;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
-            for (const auto& n : n_vec) {
-                if( n <= 1 ) continue;
-                for (idx_t k = 0; k < n; ++k)
-                    A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            INFO( "n = " << n );
+            for (idx_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*k" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? k : -k;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A );
-                check_nrm2_2nans( n, A );
-                check_nrm2_3nans( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*k" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? k : -k;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A );
+            check_nrm2_2nans( n, A );
+            check_nrm2_3nans( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*Inf" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? inf : -inf;
-            for (const auto& n : n_vec) {
-                check_nrm2_1nan( n, A, false );
-                check_nrm2_2nans( n, A, false );
-                check_nrm2_3nans( n, A, false );
-            }
+    SECTION( "A[k] = (-1)^k*Inf" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? inf : -inf;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1nan( n, A, false );
+            check_nrm2_2nans( n, A, false );
+            check_nrm2_3nans( n, A, false );
         }
     }
 
     SECTION( "All NaNs" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = NAN;
-        for (const auto& n : n_vec)
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             CHECK( isnan( nrm2( n, A, 1 ) ) );
+        }
     }
 }
 
@@ -630,7 +603,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
  *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
  *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows
+ *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
  *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
  *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
  *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
@@ -660,107 +633,115 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "At least 1 Inf in the array A" ) {
-
-        WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows" ) {
-            for (const auto& n : n_vec) {
-                if( n <= 1 ) continue;
-                const real_t Ak = bigNum / n;
-                for (idx_t k = 0; k < n; ++k)
-                    A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            INFO( "n = " << n );
+            const real_t Ak = bigNum / n;
+            for (idx_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? b : -7*b;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? b : -7*b;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? B : -7*B;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? B : -7*B;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
-            for (const auto& n : n_vec) {
-                if( n <= 1 ) continue;
-                for (idx_t k = 0; k < n; ++k)
-                    A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+        for (const auto& n : n_vec) {
+            if( n <= 1 ) continue;
+            INFO( "n = " << n );
+            for (idx_t k = 0; k < n; ++k)
+                A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
+    }
 
-        WHEN( "A[k] = (-1)^k*k" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? k : -k;
-            for (const auto& n : n_vec) {
-                check_nrm2_1inf( n, A );
-                check_nrm2_2infs( n, A );
-                check_nrm2_3infs( n, A );
-            }
+    SECTION( "A[k] = (-1)^k*k" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? k : -k;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_nrm2_1inf( n, A );
+            check_nrm2_2infs( n, A );
+            check_nrm2_3infs( n, A );
         }
     }
 
     SECTION( "All Infs" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
-        for (const auto& n : n_vec)
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             CHECK( isinf( nrm2( n, A, 1 ) ) );
+        }
     }
 }
 
@@ -772,7 +753,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
  *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
  *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows
+ *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
  *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
  *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
  *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
@@ -800,68 +781,122 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         = { 1, 4, 16, 64, N }; // n_vec[i] > 0
     TestType A[N];
 
-    WHEN( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
+    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
-        for (const auto& n : n_vec) 
-            CHECK( nrm2( n, A, 1 ) == smallNum * sqrt(n) );
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (smallNum*sqrt(n)) - 1 ) );
+
+            CHECK( nrm2ofA / (smallNum*sqrt(n)) == 1 );
+        }
     }
 
-    WHEN( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
-        for (const auto& n : n_vec) 
-            CHECK( nrm2( n, A, 1 ) == tinyNum * sqrt(n) );
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (tinyNum*sqrt(n)) - 1 ) );
+
+            CHECK( nrm2ofA / (tinyNum*sqrt(n)) == 1 );
+        }
     }
 
-    WHEN( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
-        for (const auto& n : n_vec) 
-            CHECK( nrm2( n, A, 1 ) == tiniestNum * sqrt(n) );
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (tiniestNum*sqrt(n)) - 1 ) );
+
+            CHECK( nrm2ofA / (tiniestNum*sqrt(n)) == 1 );
+        }
     }
 
-    WHEN( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 underflows" ) {
+    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
+            INFO( "n = " << n );
+
             const real_t Ak = bigNum / n;
             for (idx_t k = 0; k < n; ++k)
                 A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
-            CHECK( nrm2( n, A, 1 ) == bigNum / sqrt(n) );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (bigNum/sqrt(n)) - 1 ) );
+
+            CHECK( nrm2( n, A, 1 ) / (bigNum/sqrt(n)) == 1 );
         }
     }
 
-    WHEN( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
-        for (const auto& n : n_vec)
-            CHECK( nrm2( n, A, 1 ) == bigNum * sqrt(n) );
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (bigNum*sqrt(n)) - 1 ) );
+
+            CHECK( nrm2( n, A, 1 ) / (bigNum*sqrt(n)) == 1 );
+        }
     }
 
-    WHEN( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
-            if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == b );
-            else          CHECK( nrm2( n, A, 1 ) == 5*b*sqrt(n) );
+            INFO( "n = " << n );
+            
+            auto nrm2ofA = nrm2( n, A, 1 );
+            
+            if ( n == 1 ) {
+                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA-b)/b ) );
+                CHECK( nrm2ofA / b == 1 );
+            } else {
+                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA/(b*sqrt(n))-5)/5 ) );
+                CHECK( nrm2ofA / (b*sqrt(n)) == 5 );
+            }
         }
     }
 
-    WHEN( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
-            if ( n == 1 ) CHECK( nrm2( n, A, 1 ) == B );
-            else          CHECK( nrm2( n, A, 1 ) == 5*B*sqrt(n) );
+            INFO( "n = " << n );
+            
+            auto nrm2ofA = nrm2( n, A, 1 );
+            
+            if ( n == 1 ) {
+                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA-B)/B ) );
+                CHECK( nrm2ofA / B == 1 );
+            } else {
+                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA/(B*sqrt(n))-5)/5 ) );
+                CHECK( nrm2ofA / (B*sqrt(n)) == 5 );
+            }
         }
     }
 
-    WHEN( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
+            INFO( "n = " << n );
+
             for (idx_t k = 0; k < n; ++k)
                 A[k] = ( k % 2 == 0 ) ? 2*hugeNum/sqrt(n) : -2*hugeNum/sqrt(n);
-            CHECK( isinf( nrm2( n, A, 1 ) ) );
+
+            auto nrm2ofA = nrm2( n, A, 1 );
+            INFO( "nrm2ofA = " << std::scientific << nrm2ofA );
+            
+            CHECK( isinf( nrm2ofA ) );
         }
     }
 }
