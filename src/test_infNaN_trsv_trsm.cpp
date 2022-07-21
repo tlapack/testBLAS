@@ -27,7 +27,7 @@ const idx_t N        = 128; // Number of rows
 const idx_t P        = 3;  // Number of columns
 const idx_t max_int  = 10;  // Values in the system range from 1 to (max_int-1)
 const idx_t max_exp  = (const idx_t) ceil( log2(max_int) );
-const float sparsity        = .75;  // Approximate percentage of zeros in the data
+const float sparsity = .75;  // Approximate percentage of zeros in the data
 
 // -----------------------------------------------------------------------------
 // Main Test Cases
@@ -38,11 +38,11 @@ const float sparsity        = .75;  // Approximate percentage of zeros in the da
  *  1) generate random T (upper or lower triangular) with small integer entries,
         and with 1, and perhaps 2, 4, ... along the diagonal (to avoid roundoff)
     2) generate a random sparse x also with small integer entries
-    3) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
+    3) let b = T*x (no roundoff)
+    4) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
         to zero entries in x
-    4) solve x := T^{-1} * x
-    5) test whether NaNs appear in x (at least) in the same rows that NaNs and Infs
-        appear in T.
+    5) solve Tx = b for x
+    6) test whether NaNs appear in x in the same rows that NaNs and Infs appear in T.
  */
 TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to the solution",
                     "[trsv][BLASlv2][NaN][Inf]", TEST_TYPES ) {
@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to
     const std::vector<idx_t> n_vec = { 2, 3, 10, N };
     TestType T[N*N];
     TestType x[N];
-    TestType b[N]; // Copy of x for debugging
+    TestType b[N];
     bool T_nanRow[N];
     std::vector<TestType> nan_vec;
     std::vector<TestType> inf_vec;
@@ -75,79 +75,82 @@ TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to
     for (idx_t j = 0; j < N; ++j)
         for (idx_t i = j+1; i < N; ++i)
             T(i,j) = static_cast<float>( 0xDEADBEEF );
-
-    SECTION( "Test with random Infs and NaNs" ) {
     
-        for (const auto& n : n_vec) {
-            INFO( "n: " << n );
+    for (const auto& n : n_vec) {
+        INFO( "n = " << n );
 
-            // Initialize the upper part of T with random integers from 0 to 9
-            for (idx_t j = 0; j < n; ++j)
-                for (idx_t i = 0; i < j; ++i)
-                    T(i,j) = rand() % max_int;
+        // Initialize the upper part of T with random integers from 0 to 9
+        for (idx_t j = 0; j < n; ++j)
+            for (idx_t i = 0; i < j; ++i)
+                T(i,j) = rand() % max_int;
 
-            // Initialize the diagonal of T with random integers powers of 2
-            for (idx_t i = 0; i < n; ++i)
-                T(i,i) = pow( 2, rand() % max_exp );
+        // Initialize the diagonal of T with random integers powers of 2
+        for (idx_t i = 0; i < n; ++i)
+            T(i,i) = pow( 2, rand() % max_exp );
 
-            // Initialize x with 0s and set T_nanRow to false
-            for (idx_t i = 0; i < n; ++i) {
-                x[i] = zero;
-                T_nanRow[i] = false;
-            }
+        // Initialize x and b with 0s and set T_nanRow to false
+        for (idx_t i = 0; i < n; ++i) {
+            x[i] = zero;
+            b[i] = zero;
+            T_nanRow[i] = false;
+        }
 
-            // Put some ints in x
-            for (idx_t i = 0; i < (idx_t) floor(n*(1-sparsity)); ++i)
-                x[ rand() % n ] = max( one, real_t(rand() % max_int) );
+        // Put some ints in x
+        for (idx_t i = 0; i < (idx_t) floor(n*(1-sparsity)); ++i)
+            x[ rand() % n ] = max( one, real_t(rand() % max_int) );
 
-            // Copy x into b
-            for (idx_t i = 0; i < n; ++i)
-                b[i] = x[i];
+        // let b = T*x (no roundoff)
+        for (idx_t j = 0; j < n; ++j)
+            for (idx_t i = 0; i <= j; ++i)
+                b[i] += T(i,j) * x[j];
 
-            // Put Infs and NaNs in the columns of T respective to the 0s in x
-            // Only set NaNs in the diagonal 
-            for (idx_t j = 0; j < n; ++j) {
-                if( x[j] == zero ) {
-                    idx_t i = rand() % (j+1);
-                    if( i == j )
-                        T( i, j ) = nan_vec[ rand() % nan_vec.size() ];
-                    else {
-                        T( i, j ) = ( rand() % 2 == 0 )
-                                ? inf_vec[ rand() % inf_vec.size() ]
-                                : nan_vec[ rand() % nan_vec.size() ];
-                    }
-                    T_nanRow[i] = true;
+        // Put Infs and NaNs in the columns of T respective to the 0s in x
+        // Do not put Infs in the diagonal 
+        for (idx_t j = 0; j < n; ++j) {
+            if( x[j] == zero ) {
+                idx_t i = rand() % (j+1); // 0 <= i <= j
+                if( i == j )
+                    T( i, j ) = nan_vec[ rand() % nan_vec.size() ];
+                else {
+                    T( i, j ) = ( rand() % 2 == 0 )
+                            ? inf_vec[ rand() % inf_vec.size() ]
+                            : nan_vec[ rand() % nan_vec.size() ];
                 }
+                T_nanRow[i] = true;
             }
+        }
 
-            trsv(   Layout::ColMajor, Uplo::Upper, Op::NoTrans, Diag::NonUnit,
-                    n, T, N, x, 1 );
+        // Copy b to x
+        for (idx_t i = 0; i < n; ++i)
+            x[i] = b[i];
 
-            // Compute the number of NaNs not propagated
-            idx_t nnonNaN = 0;
-            for (idx_t i = 0; i < n; ++i) {
-                if( T_nanRow[i] && ( !isnan(x[i]) && !isinf(x[i]) ) ) {
-                    nnonNaN++;
+        // Solve for x
+        trsv(   Layout::ColMajor, Uplo::Upper, Op::NoTrans, Diag::NonUnit,
+                n, T, N, x, 1 );
 
-                    std::stringstream lineT;
-                    lineT << T(i,i);
-                    for (idx_t col = i+1; col < n; ++col)
-                        lineT << ", " << T(i,col);
-                    UNSCOPED_INFO( "T[" << i << "," << i << ":] = " << lineT.str() );
+        // Test if NaNs have propagated
+        for (idx_t i = 0; i < n; ++i) {
+            if( T_nanRow[i] ) {
 
-                    std::stringstream lineX;
-                    lineX << x[i];
-                    for (idx_t row = i+1; row < n; ++row)
-                        lineX << ", " << x[row];
-                    UNSCOPED_INFO( "x[" << i << ":] = " << lineX.str() );
+                std::stringstream lineT;
+                lineT << T(i,i);
+                for (idx_t col = i+1; col < n; ++col)
+                    lineT << ", " << T(i,col);
+                UNSCOPED_INFO( "T[" << i << "," << i << ":] = " << lineT.str() );
 
-                    UNSCOPED_INFO( "b[" << i << "] = " << b[i] );
-                }
+                std::stringstream lineX;
+                lineX << x[i];
+                for (idx_t row = i+1; row < n; ++row)
+                    lineX << ", " << x[row];
+                UNSCOPED_INFO( "x[" << i << ":] = " << lineX.str() );
+
+                UNSCOPED_INFO( "b[" << i << "] = " << b[i] );
+
+                CHECK( isnan(x[i]) );
             }
-
-            CHECK( nnonNaN == 0 );
         }
     }
+    
     #undef T
 }
 
@@ -157,11 +160,11 @@ TEMPLATE_TEST_CASE( "trsv propagates Infs and NaNs from the triangular matrix to
  *  1) generate random T (upper or lower triangular) with small integer entries,
         and with 1, and perhaps 2, 4, ... along the diagonal (to avoid roundoff)
     2) generate a random sparse X also with small integer entries
-    3) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
+    3) let B = T*X (no roundoff)
+    4) modify T by inserting (some) Infs and NaNs in the columns of T corresponding
         to zero entries in X
-    4) solve X := T^{-1} * X
-    5) test whether NaNs appear in X (at least) in the same rows that NaNs and Infs
-        appear in T.
+    5) solve TX = B for X
+    6) test whether NaNs appear in X in the same rows that NaNs and Infs appear in T.
  */
 TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to the solution",
                     "[trsm][BLASlv3][NaN][Inf]", TEST_TYPES ) {
@@ -176,7 +179,7 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
     const std::vector<idx_t> p_vec = { 1, P };
     TestType T[N*N];
     TestType x[N*P];
-    TestType b[N*P]; // Copy of x for debugging
+    TestType b[N*P];
     bool T_nanRow[N*P];
     std::vector<TestType> nan_vec;
     std::vector<TestType> inf_vec;
@@ -198,88 +201,91 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
     for (idx_t j = 0; j < N; ++j)
         for (idx_t i = j+1; i < N; ++i)
             T(i,j) = static_cast<float>( 0xDEADBEEF );
-
-    SECTION( "Test with random Infs and NaNs" ) {
     
-        for (const auto& p : p_vec) {
-        for (const auto& n : n_vec) {
-            INFO( "n: " << n );
+    for (const auto& p : p_vec) {
+    for (const auto& n : n_vec) {
+        INFO( "n: " << n );
 
-            // Initialize the upper part of T with random integers from 0 to 9
-            for (idx_t j = 0; j < n; ++j)
-                for (idx_t i = 0; i < j; ++i)
-                    T(i,j) = rand() % max_int;
+        // Initialize the upper part of T with random integers from 0 to 9
+        for (idx_t j = 0; j < n; ++j)
+            for (idx_t i = 0; i < j; ++i)
+                T(i,j) = rand() % max_int;
 
-            // Initialize the diagonal of T with random integers powers of 2
+        // Initialize the diagonal of T with random integers powers of 2
+        for (idx_t i = 0; i < n; ++i)
+            T(i,i) = pow( 2, rand() % max_exp );
+
+        // Initialize X and B with 0s and set T_nanRow to false
+        for (idx_t j = 0; j < p; ++j) {
+            for (idx_t i = 0; i < n; ++i) {
+                X(i,j) = zero;
+                B(i,j) = zero;
+                T_nanRow(i,j) = false;
+            }
+        }
+
+        // Put some ints in x
+        for (idx_t i = 0; i < (idx_t) floor((n*p)*(1-sparsity)); ++i)
+            X( rand() % n, rand() % p ) = max( one, real_t(rand() % max_int) );
+
+        // let B = T*X (no roundoff)
+        for (idx_t j = 0; j < n; ++j)
+            for (idx_t i = 0; i <= j; ++i)
+                for (idx_t k = 0; k < p; ++k)
+                    B(i,k) += T(i,j) * X(j,k);
+
+        // Put Infs and NaNs in the columns of T respective to the 0s in x
+        // Do not put Infs in the diagonal 
+        for (idx_t j = 0; j < p; ++j) {
+            for (idx_t i = 0; i < n; ++i) {
+                if( X(i,j) == zero ) {
+                    idx_t idx = rand() % (i+1); // 0 <= idx <= i
+                    if( idx == i )
+                        T( idx, i ) = nan_vec[ rand() % nan_vec.size() ];
+                    else {
+                        T( idx, i ) = ( rand() % 2 == 0 )
+                                    ? inf_vec[ rand() % inf_vec.size() ]
+                                    : nan_vec[ rand() % nan_vec.size() ];
+                    }
+                    T_nanRow(idx,j) = true;
+                }
+            }
+        }
+
+        // Copy B to X
+        for (idx_t j = 0; j < p; ++j)
             for (idx_t i = 0; i < n; ++i)
-                T(i,i) = pow( 2, rand() % max_exp );
+                X(i,j) = B(i,j);
 
-            // Initialize x with 0s and set T_nanRow to false
-            for (idx_t j = 0; j < p; ++j) {
-                for (idx_t i = 0; i < n; ++i) {
-                    X(i,j) = zero;
-                    T_nanRow(i,j) = false;
+        // Solve for X
+        trsm(   Layout::ColMajor, Side::Left, Uplo::Upper, Op::NoTrans, Diag::NonUnit,
+                n, p, real_t(1.0), T, N, x, N );
+
+        // Test if NaNs have propagated
+        idx_t nnonNaN = 0;
+        for (idx_t j = 0; j < p; ++j) {
+            for (idx_t i = 0; i < n; ++i) {
+                if( T_nanRow(i,j) ) {
+
+                    std::stringstream lineT;
+                    lineT << T(i,i);
+                    for (idx_t col = i+1; col < n; ++col)
+                        lineT << ", " << T(i,col);
+                    UNSCOPED_INFO( "T[" << i << "," << i << ":] = " << lineT.str() );
+
+                    std::stringstream lineX;
+                    lineX << X(i,j);
+                    for (idx_t row = i+1; row < n; ++row)
+                        lineX << ", " << X(row,j);
+                    UNSCOPED_INFO( "X[" << i << ":," << j << "] = " << lineX.str() );
+
+                    UNSCOPED_INFO( "B[" << i << "," << j << "] = " << B(i,j) );
+
+                    CHECK( isnan(X(i,j)) );
                 }
             }
-
-            // Put some ints in x
-            for (idx_t i = 0; i < (idx_t) floor((n*p)*(1-sparsity)); ++i)
-                X( rand() % n, rand() % p ) = max( one, real_t(rand() % max_int) );
-
-            // Copy x into b
-            for (idx_t j = 0; j < p; ++j) {
-                for (idx_t i = 0; i < n; ++i)
-                    B(i,j) = X(i,j);
-            }
-
-            // Put Infs and NaNs in the columns of T respective to the 0s in x
-            // Only set NaNs in the diagonal 
-            for (idx_t j = 0; j < p; ++j) {
-                for (idx_t i = 0; i < n; ++i) {
-                    if( X(i,j) == zero ) {
-                        idx_t idx = rand() % (i+1);
-                        if( idx == i )
-                            T( idx, i ) = nan_vec[ rand() % nan_vec.size() ];
-                        else {
-                            T( idx, i ) = ( rand() % 2 == 0 )
-                                        ? inf_vec[ rand() % inf_vec.size() ]
-                                        : nan_vec[ rand() % nan_vec.size() ];
-                        }
-                        T_nanRow(idx,j) = true;
-                    }
-                }
-            }
-
-            trsm(   Layout::ColMajor, Side::Left, Uplo::Upper, Op::NoTrans, Diag::NonUnit,
-                    n, p, real_t(1.0), T, N, x, N );
-
-            // Compute the number of NaNs not propagated
-            idx_t nnonNaN = 0;
-            for (idx_t j = 0; j < p; ++j) {
-                for (idx_t i = 0; i < n; ++i) {
-                    if( T_nanRow(i,j) && ( !isnan(X(i,j)) && !isinf(X(i,j)) ) ) {
-                        nnonNaN++;
-
-                        std::stringstream lineT;
-                        lineT << T(i,i);
-                        for (idx_t col = i+1; col < n; ++col)
-                            lineT << ", " << T(i,col);
-                        UNSCOPED_INFO( "T[" << i << "," << i << ":] = " << lineT.str() );
-
-                        std::stringstream lineX;
-                        lineX << X(i,j);
-                        for (idx_t row = i+1; row < n; ++row)
-                            lineX << ", " << X(row,j);
-                        UNSCOPED_INFO( "X[" << i << ":," << j << "] = " << lineX.str() );
-
-                        UNSCOPED_INFO( "B[" << i << "," << j << "] = " << B(i,j) );
-                    }
-                }
-            }
-
-            CHECK( nnonNaN == 0 );
-        }}
-    }
+        }
+    }}
 
     #undef T
     #undef X
