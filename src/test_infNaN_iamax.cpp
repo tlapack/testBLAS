@@ -52,6 +52,67 @@ inline void set_complexOV( real_t& Ak, idx_t k ){
 // -----------------------------------------------------------------------------
 // Test cases for iamax with Infs and NaNs at specific positions
 
+template< typename TestType >
+void check_iamax_nans_and_infs(
+    const idx_t n,
+    TestType A[],
+    const idx_t firstNaN,
+    const idx_t nNaNs,
+    const idx_t infLocs[] )
+{
+    using real_t = real_type<TestType>;
+    
+    const real_t Inf = std::numeric_limits<real_t>::infinity();
+    const std::vector<real_t> Infs = { -Inf, Inf };
+
+    if( n > nNaNs ) {
+
+        // 1 Inf, note that (i < n-nNaNs) prevents duplicates when n == nNaNs+1
+        for(idx_t i=0; (i < 2) && (i < n-nNaNs); ++i) {
+            
+            const idx_t infLoc = infLocs[i];
+            const TestType Ai = A[ infLoc ];
+            
+            for( const real_t& inf : Infs ) {
+
+                // Inf in A[infLoc]
+                A[ infLoc ] = inf;
+                INFO( "A[" << infLoc << "] = " << A[infLoc] );
+                CHECK( iamax( n, A, 1 ) == firstNaN );
+                                            
+            }
+
+            // Reset value
+            A[ infLoc ] = Ai;
+        }
+
+        // 2 Infs
+        if( n > nNaNs+1 ) {
+
+            const TestType A0 = A[ infLocs[0] ];
+            const TestType A1 = A[ infLocs[1] ];
+
+            for( const real_t& inf0 : Infs )
+            for( const real_t& inf1 : Infs ) {
+
+                // Inf in A[infLocs[0]]
+                A[ infLocs[0] ] = inf0;
+                INFO( "A[" << infLocs[0] << "] = " << A[infLocs[0]] );
+
+                // Inf in A[infLocs[1]]
+                A[ infLocs[1] ] = inf1;
+                INFO( "A[" << infLocs[1] << "] = " << A[infLocs[1]] );
+
+                CHECK( iamax( n, A, 1 ) == firstNaN );
+            }
+
+            // Reset value
+            A[ infLocs[0] ] = A0;
+            A[ infLocs[1] ] = A1;
+        }
+    }
+}
+
 /**
  * @brief Check if iamax( n, A, 1 ) works as expected using exactly 1 NaN
  * 
@@ -77,8 +138,6 @@ void check_iamax_1nan(
     TestType A[],
     const bool checkWithInf = true )
 {
-    using real_t = real_type<TestType>;
-    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -88,61 +147,29 @@ void check_iamax_1nan(
     
     // Tests
     for (const auto& k : k_vec) {
+
         const TestType Ak = A[k];
-        
-        const idx_t infIdx1 = (k > 0) ? 0 : 1;
-        const idx_t infIdx2 = (k < n-1) ? n-1 : n-2;
+
+        const idx_t infLocs[] = {
+            idx_t( (k > 0) ? 0 : 1 ),
+            idx_t( (k < n-1) ? n-1 : n-2 )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaN in A[k]
             A[k] = aNAN;
+            INFO( "A[" << k << "] = " << A[k] );
             
-            // No Infs
+            UNSCOPED_INFO( "No Infs" );
             CHECK( iamax( n, A, 1 ) == k );
 
-            if( checkWithInf && n > 1 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( iamax( n, A, 1 ) == k );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( iamax( n, A, 1 ) == k );
-
-                if( n > 2 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset value
-            A[k] = Ak;
+            if( checkWithInf )
+                check_iamax_nans_and_infs( n, A, k, 1, infLocs );
         }
+
+        // Reset value
+        A[k] = Ak;
     }
 }
 
@@ -171,8 +198,6 @@ void check_iamax_2nans(
     TestType A[],
     const bool checkWithInf = true )
 {
-    using real_t = real_type<TestType>;
-    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -187,67 +212,29 @@ void check_iamax_2nans(
         const auto& k2 = k_vec[i+1];
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
-        
-        const idx_t infIdx1 =
-            (k1 > 0) ? 0 : (
-            (k2 > 1) ? 1
-                       : 2 );
-        const idx_t infIdx2 =
-            (k2 < n-1) ? n-1 : (
-            (k1 < n-2) ? n-2
-                       : n-3 );
+
+        const idx_t infLocs[] = {
+            idx_t( (k1 > 0) ? 0 : ((k2 > 1) ? 1 : 2 ) ),
+            idx_t( (k2 < n-1) ? n-1 : ((k1 < n-2) ? n-2 : n-3 ) )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaNs in A[k1] and A[k2]
             A[k1] = A[k2] = aNAN;
-            
-            // No Infs
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+
+            UNSCOPED_INFO( "No Infs" );
             CHECK( iamax( n, A, 1 ) == k1 );
 
-            if( checkWithInf && n > 2 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( iamax( n, A, 1 ) == k1 );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( iamax( n, A, 1 ) == k1 );
-
-                if( n > 3 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
+            if( checkWithInf )
+                check_iamax_nans_and_infs( n, A, k1, 2, infLocs );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
     }
 }
 
@@ -276,8 +263,6 @@ void check_iamax_3nans(
     TestType A[],
     const bool checkWithInf = true )
 {
-    using real_t = real_type<TestType>;
-    
     std::vector<TestType> nan_vec;
     testBLAS::set_nan_vector( nan_vec );
         
@@ -294,68 +279,35 @@ void check_iamax_3nans(
         const TestType Ak1 = A[k1];
         const TestType Ak2 = A[k2];
         const TestType Ak3 = A[k3];
-        
-        const idx_t infIdx1 =
-            (k1 > 0) ? 0 : (
-            (k2 > 1) ? 1
-                        : 2 );
-        const idx_t infIdx2 =
-            (k2 < n-1) ? n-1 : (
-            (k1 < n-2) ? n-2
-                        : n-3 );
+
+        const idx_t infLocs[] = {
+            idx_t(  (k1 > 0)    ? 0 : (
+                    (k2 > 1)    ? 1
+                                : 2 ) ),
+            idx_t(  (k2 < n-1)  ? n-1 : (
+                    (k1 < n-2)  ? n-2
+                                : n-3 ) )
+        };
 
         for (const auto& aNAN : nan_vec) {
 
             // NaNs in A[k1], A[k2] and A[k3]
             A[k1] = A[k2] = A[k3] = aNAN;
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+            INFO( "A[" << k3 << "] = " << A[k3] );
         
-            // No Infs
+            UNSCOPED_INFO( "No Infs" );
             CHECK( iamax( n, A, 1 ) == k1 );
 
-            if( checkWithInf && n > 3 ) {
-                const real_t inf = std::numeric_limits<real_t>::infinity();
-                const TestType AinfIdx1 = A[ infIdx1 ];
-
-                // Inf in first non-NaN location
-                A[ infIdx1 ] = inf;
-                CHECK( iamax( n, A, 1 ) == k1 );
-                
-                // -Inf in first non-NaN location
-                A[ infIdx1 ] = -inf;
-                CHECK( iamax( n, A, 1 ) == k1 );
-
-                if( n > 4 ) {
-                    const TestType AinfIdx2 = A[ infIdx2 ];
-
-                    // Inf in last non-NaN location
-                    A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // -Inf in last non-NaN location
-                    A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                    
-                    // -Inf in first and last non-NaN location
-                    A[ infIdx1 ] = A[ infIdx2 ] = -inf;
-                    CHECK( iamax( n, A, 1 ) == k1 );
-                
-                    // Reset value
-                    A[ infIdx2 ] = AinfIdx2;
-                }
-                
-                // Reset value
-                A[ infIdx1 ] = AinfIdx1;
-            }
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
-            A[k3] = Ak3;
+            if( checkWithInf ) 
+                check_iamax_nans_and_infs( n, A, k1, 3, infLocs );
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
+        A[k3] = Ak3;
     }
 }
 
@@ -384,19 +336,20 @@ void check_iamax_1inf(
     
     // Tests
     for (const auto& k : k_vec) {
+
         const TestType Ak = A[k];
 
         for (const auto& aInf : inf_vec) {
 
             // (-1)^k*Inf in A[k]
             A[k] = ( k % 2 == 0 ) ? aInf : -aInf;
+            INFO( "A[" << k << "] = " << A[k] );
             
-            // No Infs
             CHECK( iamax( n, A, 1 ) == k );
-
-            // Reset value
-            A[k] = Ak;
         }
+
+        // Reset value
+        A[k] = Ak;
     }
 }
 
@@ -435,13 +388,15 @@ void check_iamax_2infs(
             // (-1)^k*Inf in A[k]
             A[k1] = ( k1 % 2 == 0 ) ? aInf : -aInf;
             A[k2] = ( k2 % 2 == 0 ) ? aInf : -aInf;
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
             
             CHECK( iamax( n, A, 1 ) == k1 );
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
     }
 }
 
@@ -483,14 +438,17 @@ void check_iamax_3infs(
             A[k1] = ( k1 % 2 == 0 ) ? aInf : -aInf;
             A[k2] = ( k2 % 2 == 0 ) ? aInf : -aInf;
             A[k3] = ( k3 % 2 == 0 ) ? aInf : -aInf;
+            INFO( "A[" << k1 << "] = " << A[k1] );
+            INFO( "A[" << k2 << "] = " << A[k2] );
+            INFO( "A[" << k3 << "] = " << A[k3] );
             
             CHECK( iamax( n, A, 1 ) == k1 );
-
-            // Reset values
-            A[k1] = Ak1;
-            A[k2] = Ak2;
-            A[k3] = Ak3;
         }
+
+        // Reset values
+        A[k1] = Ak1;
+        A[k2] = Ak2;
+        A[k3] = Ak3;
     }
 }
 
@@ -522,76 +480,79 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "At least 1 NaN in the array A" ) {
+    SECTION( "A[k] = (-1)^k*k" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? k : -k;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_iamax_1nan( n, A );
+            check_iamax_2nans( n, A );
+            check_iamax_3nans( n, A );
+        }
+    }
 
-        WHEN( "A[k] = (-1)^k*k" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? k : -k;
+    SECTION( "A[k] = (-1)^k*Inf" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? inf : -inf;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_iamax_1nan( n, A, false );
+            check_iamax_2nans( n, A, false );
+            check_iamax_3nans( n, A, false );
+        }
+    }
+
+    if (is_complex<TestType>::value) {
+
+        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+            for (idx_t k = 0; k < N; ++k) {
+                if ( k % 2 == 0 ) set_complexk( A[k], k );
+                else              set_complexOV( A[k], k );
+            }
             for (const auto& n : n_vec) {
+                INFO( "n = " << n );
                 check_iamax_1nan( n, A );
                 check_iamax_2nans( n, A );
                 check_iamax_3nans( n, A );
             }
         }
 
-        WHEN( "A[k] = (-1)^k*Inf" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? inf : -inf;
+        SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+            for (idx_t k = 0; k < N; ++k) {
+                if ( k % 2 == 0 ) set_complexOV( A[k], k );
+                else              set_complexk( A[k], k );
+            }
             for (const auto& n : n_vec) {
-                check_iamax_1nan( n, A, false );
-                check_iamax_2nans( n, A, false );
-                check_iamax_3nans( n, A, false );
+                INFO( "n = " << n );
+                check_iamax_1nan( n, A );
+                check_iamax_2nans( n, A );
+                check_iamax_3nans( n, A );
             }
         }
 
-        if (is_complex<TestType>::value) {
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
-                for (idx_t k = 0; k < N; ++k) {
+        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+            for (const auto& n : n_vec) {
+                INFO( "n = " << n );
+                for (idx_t k = 0; k < n; ++k) {
                     if ( k % 2 == 0 ) set_complexk( A[k], k );
-                    else              set_complexOV( A[k], k );
+                    else              set_complexOV( A[k], n-k );
                 }
-                for (const auto& n : n_vec) {
-                    check_iamax_1nan( n, A );
-                    check_iamax_2nans( n, A );
-                    check_iamax_3nans( n, A );
-                }
+                check_iamax_1nan( n, A );
+                check_iamax_2nans( n, A );
+                check_iamax_3nans( n, A );
             }
+        }
 
-            WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (idx_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
+        SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+            for (const auto& n : n_vec) {
+                INFO( "n = " << n );
+                for (idx_t k = 0; k < n; ++k) {
+                    if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                     else              set_complexk( A[k], k );
                 }
-                for (const auto& n : n_vec) {
-                    check_iamax_1nan( n, A );
-                    check_iamax_2nans( n, A );
-                    check_iamax_3nans( n, A );
-                }
-            }
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (idx_t k = 0; k < n; ++k) {
-                        if ( k % 2 == 0 ) set_complexk( A[k], k );
-                        else              set_complexOV( A[k], n-k );
-                    }
-                    check_iamax_1nan( n, A );
-                    check_iamax_2nans( n, A );
-                    check_iamax_3nans( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (idx_t k = 0; k < n; ++k) {
-                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
-                        else              set_complexk( A[k], k );
-                    }
-                    check_iamax_1nan( n, A );
-                    check_iamax_2nans( n, A );
-                    check_iamax_3nans( n, A );
-                }
+                check_iamax_1nan( n, A );
+                check_iamax_2nans( n, A );
+                check_iamax_3nans( n, A );
             }
         }
     }
@@ -599,8 +560,10 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
     SECTION( "All NaNs" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = NAN;
-        for (const auto& n : n_vec)
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             CHECK( iamax( n, A, 1 ) == 0 );
+        }
     }
 }
 
@@ -628,66 +591,68 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "At least 1 Inf in the array A" ) {
+    SECTION( "A[k] = (-1)^k*k" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? k : -k;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            check_iamax_1inf( n, A );
+            check_iamax_2infs( n, A );
+            check_iamax_3infs( n, A );
+        }
+    }
 
-        WHEN( "A[k] = (-1)^k*k" ) {
-            for (idx_t k = 0; k < N; ++k)
-                A[k] = ( k % 2 == 0 ) ? k : -k;
+    if (is_complex<TestType>::value) {
+
+        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+            for (idx_t k = 0; k < N; ++k) {
+                if ( k % 2 == 0 ) set_complexk( A[k], k );
+                else              set_complexOV( A[k], k );
+            }
             for (const auto& n : n_vec) {
+                INFO( "n = " << n );
                 check_iamax_1inf( n, A );
                 check_iamax_2infs( n, A );
                 check_iamax_3infs( n, A );
             }
         }
 
-        if (is_complex<TestType>::value) {
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
-                for (idx_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexk( A[k], k );
-                    else              set_complexOV( A[k], k );
-                }
-                for (const auto& n : n_vec) {
-                    check_iamax_1inf( n, A );
-                    check_iamax_2infs( n, A );
-                    check_iamax_3infs( n, A );
-                }
+        SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+            for (idx_t k = 0; k < N; ++k) {
+                if ( k % 2 == 0 ) set_complexOV( A[k], k );
+                else              set_complexk( A[k], k );
             }
+            for (const auto& n : n_vec) {
+                INFO( "n = " << n );
+                check_iamax_1inf( n, A );
+                check_iamax_2infs( n, A );
+                check_iamax_3infs( n, A );
+            }
+        }
 
-            WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (idx_t k = 0; k < N; ++k) {
-                    if ( k % 2 == 0 ) set_complexOV( A[k], k );
+        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+            for (const auto& n : n_vec) {
+                INFO( "n = " << n );
+                for (idx_t k = 0; k < n; ++k) {
+                    if ( k % 2 == 0 ) set_complexk( A[k], k );
+                    else              set_complexOV( A[k], n-k );
+                }
+                check_iamax_1inf( n, A );
+                check_iamax_2infs( n, A );
+                check_iamax_3infs( n, A );
+            }
+        }
+
+        SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+            for (const auto& n : n_vec) {
+                INFO( "n = " << n );
+                for (idx_t k = 0; k < n; ++k) {
+                    if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                     else              set_complexk( A[k], k );
                 }
-                for (const auto& n : n_vec) {
-                    check_iamax_1inf( n, A );
-                    check_iamax_2infs( n, A );
-                    check_iamax_3infs( n, A );
-                }
-            }
-
-            WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (idx_t k = 0; k < n; ++k) {
-                        if ( k % 2 == 0 ) set_complexk( A[k], k );
-                        else              set_complexOV( A[k], n-k );
-                    }
-                    check_iamax_1inf( n, A );
-                    check_iamax_2infs( n, A );
-                    check_iamax_3infs( n, A );
-                }
-            }
-
-            WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
-                for (const auto& n : n_vec) {
-                    for (idx_t k = 0; k < n; ++k) {
-                        if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
-                        else              set_complexk( A[k], k );
-                    }
-                    check_iamax_1inf( n, A );
-                    check_iamax_2infs( n, A );
-                    check_iamax_3infs( n, A );
-                }
+                check_iamax_1inf( n, A );
+                check_iamax_2infs( n, A );
+                check_iamax_3infs( n, A );
             }
         }
     }
@@ -695,8 +660,10 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
     SECTION( "All Infs" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
-        for (const auto& n : n_vec)
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             CHECK( iamax( n, A, 1 ) == 0 );
+        }
     }
 }
 
@@ -721,32 +688,35 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+    SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
         for (idx_t k = 0; k < N; ++k) {
             if ( k % 2 == 0 ) set_complexk( A[k], k );
             else              set_complexOV( A[k], k );
         }
         for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             if ( n == 1 )          CHECK( iamax( n, A, 1 ) == 0 );
             else if ( n % 2 == 0 ) CHECK( iamax( n, A, 1 ) == n-1 );
             else                   CHECK( iamax( n, A, 1 ) == n-2 );
         }
     }
 
-    WHEN( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+    SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (idx_t k = 0; k < N; ++k) {
             if ( k % 2 == 0 ) set_complexOV( A[k], k );
             else              set_complexk( A[k], k );
         }
         for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             if ( n == 1 )          CHECK( iamax( n, A, 1 ) == 0 );
             else if ( n % 2 == 0 ) CHECK( iamax( n, A, 1 ) == n-2 );
             else                   CHECK( iamax( n, A, 1 ) == n-1 );
         }
     }
 
-    WHEN( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+    SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
         for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             for (idx_t k = 0; k < n; ++k) {
                 if ( k % 2 == 0 ) set_complexk( A[k], k );
                 else              set_complexOV( A[k], n-k );
@@ -756,8 +726,9 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
         }
     }
 
-    WHEN( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+    SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (const auto& n : n_vec) {
+            INFO( "n = " << n );
             for (idx_t k = 0; k < n; ++k) {
                 if ( k % 2 == 0 ) set_complexOV( A[k], n-k );
                 else              set_complexk( A[k], k );
