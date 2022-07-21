@@ -437,17 +437,18 @@ void check_nrm2_3infs(
  * @brief Test case for nrm2 with arrays containing at least 1 NaN
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
- *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
- *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
+ *  (a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
+ *  (b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
+ *  (c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
- *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
- *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
- *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
- *  (8) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
- *  (9) A[k] = (-1)^k*k
- *  (10) A[k]= (-1)^k*Inf
+ *  (d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
+ *  (e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
+ *  (f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
+ *  (g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
+ *  (h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
+ *  (i) A[k] = (-1)^k*k
+ *  (j) A[k] = (-1)^k*Inf
+ *  (k) A[k] = NaN
  */
 TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
                     "[nrm2][BLASlv1][NaN][Inf]", TEST_TYPES ) {
@@ -472,7 +473,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
+    SECTION( "(a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
         for (const auto& n : n_vec) {
@@ -483,7 +484,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+    SECTION( "(b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
         for (const auto& n : n_vec) {
@@ -494,7 +495,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+    SECTION( "(c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
         for (const auto& n : n_vec) {
@@ -505,7 +506,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
+    SECTION( "(d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );
@@ -518,7 +519,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+    SECTION( "(e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
         for (const auto& n : n_vec) {
@@ -529,7 +530,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+    SECTION( "(f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
@@ -540,7 +541,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+    SECTION( "(g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
@@ -551,7 +552,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+    SECTION( "(h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );
@@ -563,7 +564,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*k" ) {
+    SECTION( "(i) A[k] = (-1)^k*k" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? k : -k;
         for (const auto& n : n_vec) {
@@ -574,7 +575,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*Inf" ) {
+    SECTION( "(j) A[k] = (-1)^k*Inf" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
         for (const auto& n : n_vec) {
@@ -585,7 +586,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
         }
     }
 
-    SECTION( "All NaNs" ) {
+    SECTION( "(k) A[k] = NaN" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = NAN;
         for (const auto& n : n_vec) {
@@ -599,16 +600,17 @@ TEMPLATE_TEST_CASE( "nrm2 returns NaN for arrays with at least 1 NaN",
  * @brief Test case for nrm2 with arrays containing at least 1 Inf and no NaNs
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
- *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
- *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
+ *  (a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
+ *  (b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
+ *  (c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
- *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
- *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
- *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
- *  (8) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
- *  (9) A[k] = (-1)^k*k
+ *  (d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
+ *  (e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
+ *  (f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
+ *  (g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
+ *  (h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
+ *  (i) A[k] = (-1)^k*k
+ *  (j) A[k] = (-1)^k*Inf
  */
 TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs",
                     "[nrm2][BLASlv1][Inf]", TEST_TYPES ) {
@@ -633,7 +635,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
+    SECTION( "(a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
         for (const auto& n : n_vec) {
@@ -644,7 +646,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+    SECTION( "(b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
         for (const auto& n : n_vec) {
@@ -655,7 +657,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+    SECTION( "(c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
         for (const auto& n : n_vec) {
@@ -666,7 +668,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
+    SECTION( "(d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );
@@ -679,7 +681,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+    SECTION( "(e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
         for (const auto& n : n_vec) {
@@ -690,7 +692,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+    SECTION( "(f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
@@ -701,7 +703,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+    SECTION( "(g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
@@ -712,7 +714,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+    SECTION( "(h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );
@@ -724,7 +726,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "A[k] = (-1)^k*k" ) {
+    SECTION( "(i) A[k] = (-1)^k*k" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? k : -k;
         for (const auto& n : n_vec) {
@@ -735,7 +737,7 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
         }
     }
 
-    SECTION( "All Infs" ) {
+    SECTION( "(j) A[k] = (-1)^k*Inf" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
         for (const auto& n : n_vec) {
@@ -749,15 +751,15 @@ TEMPLATE_TEST_CASE( "nrm2 returns Inf for arrays with at least 1 Inf and no NaNs
  * @brief Test case for nrm2 with finite input which expects an exact output
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
- *  (2) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
- *  (3) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
+ *  (a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is (b/2)*sqrt(n)
+ *  (b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is x*sqrt(n)
+ *  (c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is x*sqrt(n)
  *      Mind that not all platforms might implement subnormal numbers.
- *  (4) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
- *  (5) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
- *  (6) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
- *  (7) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
- *  (8) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
+ *  (d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows
+ *  (e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)
+ *  (f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)
+ *  (g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)
+ *  (h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows
  */
 TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
                     "[nrm2][BLASlv1]", TEST_TYPES ) {
@@ -781,7 +783,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         = { 1, 4, 16, 64, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
+    SECTION( "(a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
         for (const auto& n : n_vec) {
@@ -794,7 +796,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
+    SECTION( "(b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
         for (const auto& n : n_vec) {
@@ -807,7 +809,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
+    SECTION( "(c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
         for (const auto& n : n_vec) {
@@ -820,7 +822,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
+    SECTION( "(d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );
@@ -836,7 +838,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
+    SECTION( "(e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
         for (const auto& n : n_vec) {
@@ -849,7 +851,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
+    SECTION( "(f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
@@ -867,7 +869,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
+    SECTION( "(g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
@@ -885,7 +887,7 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         }
     }
 
-    SECTION( "A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
+    SECTION( "(h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
             INFO( "n = " << n );

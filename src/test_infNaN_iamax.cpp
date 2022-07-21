@@ -459,13 +459,14 @@ void check_iamax_3infs(
  * @brief Test case for iamax with arrays containing at least 1 NaN
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*k
- *  (2) A[k] = (-1)^k*Inf
+ *  (a) A[k] = (-1)^k*k
+ *  (b) A[k] = (-1)^k*Inf
  * and, for complex data type: 
- *  (3) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
- *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
- *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (c) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
+ *  (d) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (e) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
+ *  (f) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (g) A[k] = NaN
  */
 TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN",
                     "[iamax][BLASlv1][NaN]", TEST_TYPES ) {
@@ -480,7 +481,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = (-1)^k*k" ) {
+    SECTION( "(a) A[k] = (-1)^k*k" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? k : -k;
         for (const auto& n : n_vec) {
@@ -491,7 +492,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
         }
     }
 
-    SECTION( "A[k] = (-1)^k*Inf" ) {
+    SECTION( "(b) A[k] = (-1)^k*Inf" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? inf : -inf;
         for (const auto& n : n_vec) {
@@ -504,7 +505,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
 
     if (is_complex<TestType>::value) {
 
-        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+        SECTION( "(c) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
             for (idx_t k = 0; k < N; ++k) {
                 if ( k % 2 == 0 ) set_complexk( A[k], k );
                 else              set_complexOV( A[k], k );
@@ -517,7 +518,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
             }
         }
 
-        SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+        SECTION( "(d) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
             for (idx_t k = 0; k < N; ++k) {
                 if ( k % 2 == 0 ) set_complexOV( A[k], k );
                 else              set_complexk( A[k], k );
@@ -530,7 +531,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
             }
         }
 
-        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+        SECTION( "(e) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
             for (const auto& n : n_vec) {
                 INFO( "n = " << n );
                 for (idx_t k = 0; k < n; ++k) {
@@ -543,7 +544,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
             }
         }
 
-        SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+        SECTION( "(f) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
             for (const auto& n : n_vec) {
                 INFO( "n = " << n );
                 for (idx_t k = 0; k < n; ++k) {
@@ -557,7 +558,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
         }
     }
 
-    SECTION( "All NaNs" ) {
+    SECTION( "(g) A[k] = NaN" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = NAN;
         for (const auto& n : n_vec) {
@@ -571,12 +572,13 @@ TEMPLATE_TEST_CASE( "iamax returns the first NaN for arrays with at least 1 NaN"
  * @brief Test case for iamax with arrays containing at least 1 Inf and no NaNs
  * 
  * Default entries:
- *  (1) A[k] = (-1)^k*k
+ *  (a) A[k] = (-1)^k*k
+ *  (b) A[k] = (-1)^k*Inf
  * and, for complex data type: 
- *  (3) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
- *  (4) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
- *  (5) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
- *  (6) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (c) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd
+ *  (d) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
+ *  (e) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd
+ *  (f) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd
  */
 TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf and no NaNs",
                     "[iamax][BLASlv1][Inf]", TEST_TYPES ) {
@@ -591,7 +593,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = (-1)^k*k" ) {
+    SECTION( "(a) A[k] = (-1)^k*k" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? k : -k;
         for (const auto& n : n_vec) {
@@ -602,9 +604,18 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
         }
     }
 
+    SECTION( "(b) A[k] = (-1)^k*Inf" ) {
+        for (idx_t k = 0; k < N; ++k)
+            A[k] = ( k % 2 == 0 ) ? inf : -inf;
+        for (const auto& n : n_vec) {
+            INFO( "n = " << n );
+            CHECK( iamax( n, A, 1 ) == 0 );
+        }
+    }
+
     if (is_complex<TestType>::value) {
 
-        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+        SECTION( "(c) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
             for (idx_t k = 0; k < N; ++k) {
                 if ( k % 2 == 0 ) set_complexk( A[k], k );
                 else              set_complexOV( A[k], k );
@@ -617,7 +628,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
             }
         }
 
-        SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+        SECTION( "(d) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
             for (idx_t k = 0; k < N; ++k) {
                 if ( k % 2 == 0 ) set_complexOV( A[k], k );
                 else              set_complexk( A[k], k );
@@ -630,7 +641,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
             }
         }
 
-        SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+        SECTION( "(e) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
             for (const auto& n : n_vec) {
                 INFO( "n = " << n );
                 for (idx_t k = 0; k < n; ++k) {
@@ -643,7 +654,7 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
             }
         }
 
-        SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+        SECTION( "(f) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
             for (const auto& n : n_vec) {
                 INFO( "n = " << n );
                 for (idx_t k = 0; k < n; ++k) {
@@ -656,27 +667,16 @@ TEMPLATE_TEST_CASE( "iamax returns the first Inf for arrays with at least 1 Inf 
             }
         }
     }
-
-    SECTION( "All Infs" ) {
-        for (idx_t k = 0; k < N; ++k)
-            A[k] = ( k % 2 == 0 ) ? inf : -inf;
-        for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-            CHECK( iamax( n, A, 1 ) == 0 );
-        }
-    }
 }
 
 /**
  * @brief Test case for iamax where A(k) are finite but abs(real(A(k)))+abs(imag(A(k))) can overflow.
  * 
  * 4 cases:
- *     A(k) = -k + i*k for k even, A(k) = OV*((k+2)/(k+3)) + i*OV*((k+2)/(k+3)) for k odd.
- *              (Correct answer = last odd k)
- *     Swap odd and even. (Correct answer = last even k)
- *     A(k) = -k + i*k for k even, A(k) = OV*((n-k+2)/(n-k+3)) + i*OV*((n-k+2)/(n-k+3)) for k odd.
- *              (Correct answer = 1)
- *     Swap odd and even (Correct answer = 2).
+ *  (a) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd. Correct answer = last odd k.
+ *  (b) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd. Correct answer = last even k.
+ *  (c) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd. Correct answer = 0.
+ *  (d) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd. Correct answer = 1.
  */
 TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(imag(A(k))) can overflow",
                     "[iamax][BLASlv1]", TEST_CPLX_TYPES ) {
@@ -688,7 +688,7 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
         = { 1, 2, 3, 10, N }; // n_vec[i] > 0
     TestType A[N];
 
-    SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
+    SECTION( "(a) A[k] = -k + i*k for k even, and A[k] = OV*((k+2)/(k+3))*(1+i) for k odd" ) {
         for (idx_t k = 0; k < N; ++k) {
             if ( k % 2 == 0 ) set_complexk( A[k], k );
             else              set_complexOV( A[k], k );
@@ -701,20 +701,19 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
         }
     }
 
-    SECTION( "A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+    SECTION( "(b) A[k] = OV*((k+2)/(k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (idx_t k = 0; k < N; ++k) {
             if ( k % 2 == 0 ) set_complexOV( A[k], k );
             else              set_complexk( A[k], k );
         }
         for (const auto& n : n_vec) {
             INFO( "n = " << n );
-            if ( n == 1 )          CHECK( iamax( n, A, 1 ) == 0 );
-            else if ( n % 2 == 0 ) CHECK( iamax( n, A, 1 ) == n-2 );
-            else                   CHECK( iamax( n, A, 1 ) == n-1 );
+            if ( n % 2 == 0 ) CHECK( iamax( n, A, 1 ) == n-2 );
+            else              CHECK( iamax( n, A, 1 ) == n-1 );
         }
     }
 
-    SECTION( "A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
+    SECTION( "(c) A[k] = -k + i*k for k even, and A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k odd" ) {
         for (const auto& n : n_vec) {
             INFO( "n = " << n );
             for (idx_t k = 0; k < n; ++k) {
@@ -726,7 +725,7 @@ TEMPLATE_TEST_CASE( "iamax works for complex data A when abs(real(A(k)))+abs(ima
         }
     }
 
-    SECTION( "A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
+    SECTION( "(d) A[k] = OV*((n-k+2)/(n-k+3))*(1+i) for k even, and A[k] = -k + i*k for k odd" ) {
         for (const auto& n : n_vec) {
             INFO( "n = " << n );
             for (idx_t k = 0; k < n; ++k) {
