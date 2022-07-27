@@ -15,7 +15,6 @@
 #endif
 
 #include <catch2/catch_template_test_macros.hpp>
-#include <catch2/generators/catch_generators.hpp>
 #include <limits>
 #include <vector>
 #include <complex>
@@ -25,6 +24,68 @@ using namespace tlapack;
 // -----------------------------------------------------------------------------
 // Test cases for nrm2 with Infs and NaNs at specific positions
 
+/**
+ * @brief Returns the error bound for the relative error of nrm2( n, x, 1 )
+ * @param n Size of the array x
+ * 
+ * @details This bound can be obtained by adapting doi.org/10.1137/120894488
+ * as follows:
+ * 
+ *      r is the computed sum of squares |x|^2
+ *      r <= (1+n*u)*|x|^2 from doi.org/10.1137/120894488
+ * 
+ * Then:
+ * 
+ *      sqrt(r) <= sqrt(1+n*u) * |x|
+ *      fl(sqrt(r)) <= (1+u)*sqrt(r) <= (1+u)*sqrt(1+n*u) * |x|
+ *      fl(sqrt(r))-|x| <= ((1+u)*sqrt(1+n*u)-1) * |x|
+ */
+template< typename real_t >
+real_t worst_case_error_bnd( const idx_t n )
+{
+    const auto u = std::numeric_limits< real_t >::epsilon();
+    return (1+u)*sqrt(1+n*u)-1;
+}
+
+/**
+ * @brief Test nrm2 using the worst-case error bound
+ * 
+ * @param[in] n
+ *      Size of A
+ * @param[in] A
+ *      Array with non-NAN data
+ * @param trueNorm
+ *      Expected value for the norm
+ * @return Relative error
+ */
+template< typename TestType >
+real_type<TestType> test_worst_case( const idx_t n, TestType A[], real_type<TestType> trueNorm ) {
+    using real_t = real_type<TestType>;
+
+    real_t nrm2ofA  = nrm2( n, A, 1 );
+    real_t relError = tlapack::abs( (nrm2ofA - trueNorm) / trueNorm );
+    
+    INFO( "n = " << n );
+    INFO( "Rel. error = " << std::scientific << relError );
+    CHECK( relError < worst_case_error_bnd<real_t>(n) );
+    
+    return relError;
+}
+
+/**
+ * @brief Check if nrm2( n, A, 1 ) works as expected using exactly NaNs and Infs
+ * 
+ * NaN locations: @see testBLAS::set_array_locations
+ * 
+ * @param[in] n
+ *      Size of A
+ * @param[in] A
+ *      Array with non-NAN data
+ * @param[in] nNaNs
+ *      Number of NaNs
+ * @param[in] infLocs
+ *      Entries that will receive infinity numbers
+ */
 template< typename TestType >
 void check_nrm2_nans_and_infs(
     const idx_t n,
@@ -783,108 +844,139 @@ TEMPLATE_TEST_CASE( "nrm2 with finite input which expects an exact output",
         = { 1, 4, 16, 64, N }; // n_vec[i] > 0
     TestType A[N];
 
+    // Reporters
+    real_t maxRelError( 0 );
+    real_t effWorstCase( 1 );
+    real_t maxEffWorstCase( 0 );
+
     SECTION( "(a) A[k] = (-1)^k*b/2, where b is the Blue's min constant. (b/2)^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? smallNum : -smallNum;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-
-            auto nrm2ofA = nrm2( n, A, 1 );
-            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (smallNum*sqrt(n)) - 1 ) );
-
-            CHECK( nrm2ofA / (smallNum*sqrt(n)) == 1 );
+            real_t relError = test_worst_case( n, A, smallNum*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" << 
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(b) A[k] = (-1)^k*x, where x is the underflow threshold. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tinyNum : -tinyNum;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-
-            auto nrm2ofA = nrm2( n, A, 1 );
-            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (tinyNum*sqrt(n)) - 1 ) );
-
-            CHECK( nrm2ofA / (tinyNum*sqrt(n)) == 1 );
+            real_t relError = test_worst_case( n, A, tinyNum*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(c) A[k] = (-1)^k*x, where x is the smallest subnormal number. x^2 underflows but the norm is positive" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? tiniestNum : -tiniestNum;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-
-            auto nrm2ofA = nrm2( n, A, 1 );
-            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (tiniestNum*sqrt(n)) - 1 ) );
-
-            CHECK( nrm2ofA / (tiniestNum*sqrt(n)) == 1 );
+            real_t relError = test_worst_case( n, A, tiniestNum*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(d) A[k] = (-1)^k*2*B/n, where B is the Blue's max constant, n > 1. (2*B/n)^2 and the norm are finite but sum_k A[k]^2 overflows" ) {
         for (const auto& n : n_vec) {
             if( n <= 1 ) continue;
-            INFO( "n = " << n );
 
             const real_t Ak = bigNum / n;
             for (idx_t k = 0; k < n; ++k)
                 A[k] = ( k % 2 == 0 ) ? Ak : -Ak;
 
-            auto nrm2ofA = nrm2( n, A, 1 );
-            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (bigNum/sqrt(n)) - 1 ) );
-
-            CHECK( nrm2( n, A, 1 ) / (bigNum/sqrt(n)) == 1 );
+            real_t relError = test_worst_case( n, A, bigNum/sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(e) A[k] = (-1)^k*2*B, where B is the Blue's max constant. (2*B)^2 overflows but the norm is (2*B)*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? bigNum : -bigNum;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-
-            auto nrm2ofA = nrm2( n, A, 1 );
-            INFO( "Rel. error = " << std::scientific << tlapack::abs( nrm2ofA / (bigNum*sqrt(n)) - 1 ) );
-
-            CHECK( nrm2( n, A, 1 ) / (bigNum*sqrt(n)) == 1 );
+            real_t relError = test_worst_case( n, A, (2*B)*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(f) A[k] = b for k even, and A[k] = -7*b for k odd, where b is the Blue's min constant. The norm is 5*b*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? b : -7*b;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-            
-            auto nrm2ofA = nrm2( n, A, 1 );
-            
-            if ( n == 1 ) {
-                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA-b)/b ) );
-                CHECK( nrm2ofA / b == 1 );
-            } else {
-                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA/(b*sqrt(n))-5)/5 ) );
-                CHECK( nrm2ofA / (b*sqrt(n)) == 5 );
-            }
+            real_t relError = test_worst_case( n, A, (n==1) ? b : 5*b*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(g) A[k] = B for k even, and A[k] = -7*B for k odd, where B is the Blue's max constant. The norm is 5*B*sqrt(n)" ) {
         for (idx_t k = 0; k < N; ++k)
             A[k] = ( k % 2 == 0 ) ? B : -7*B;
         for (const auto& n : n_vec) {
-            INFO( "n = " << n );
-            
-            auto nrm2ofA = nrm2( n, A, 1 );
-            
-            if ( n == 1 ) {
-                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA-B)/B ) );
-                CHECK( nrm2ofA / B == 1 );
-            } else {
-                INFO( "Rel. error = " << std::scientific << tlapack::abs( (nrm2ofA/(B*sqrt(n))-5)/5 ) );
-                CHECK( nrm2ofA / (B*sqrt(n)) == 5 );
-            }
+            real_t relError = test_worst_case( n, A, (n==1) ? B : 5*B*sqrt(n) );
+            maxRelError = max( relError, maxRelError );
+            if( relError != real_t(0) )
+                effWorstCase = min( relError/worst_case_error_bnd<real_t>(n), effWorstCase );
+            maxEffWorstCase = max( relError/worst_case_error_bnd<real_t>(n), maxEffWorstCase );
         }
+        WARN( "Max relative error = "
+                << std::scientific << maxRelError << "\n" <<
+              "Min( positive relative Error / worst-case error bound ) = "
+                << std::scientific << effWorstCase << "\n" <<
+              "Max( relative Error / worst-case error bound ) = "
+                << std::scientific << maxEffWorstCase );
     }
 
     SECTION( "(h) A[k] = (-1)^k*2*OV/sqrt(n), n > 1. 2*OV/sqrt(n) is finite but the norm overflows" ) {
