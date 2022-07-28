@@ -4,8 +4,8 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#ifndef __TESTBLAS_DEFINES_HH__
-#define __TESTBLAS_DEFINES_HH__
+#ifndef TESTBLAS_DEFINES_HH
+#define TESTBLAS_DEFINES_HH
 
 #include <complex>
 
@@ -48,4 +48,4 @@
     #define TEST_STD_TYPES TEST_REAL_STD_TYPES, TEST_CPLX_STD_TYPES
 #endif
 
-#endif // __TESTBLAS_DEFINES_HH__
+#endif // TESTBLAS_DEFINES_HH

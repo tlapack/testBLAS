@@ -4,8 +4,8 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#ifndef __TESTBLAS_UTILS_HH__
-#define __TESTBLAS_UTILS_HH__
+#ifndef TESTBLAS_UTILS_HH
+#define TESTBLAS_UTILS_HH
 
 #include "defines.hpp"
 #include <vector>
@@ -181,4 +181,4 @@ inline void set_array_trioLocations(
 
 }
 
-#endif // __TESTBLAS_UTILS_HH__
+#endif // TESTBLAS_UTILS_HH

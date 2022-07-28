@@ -311,8 +311,8 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is not referenced" ) {
-        complex_t const _A[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( hemv( layout, uplo, 2, alpha, _A, 2, (complex_t const *)x, incx, beta, (complex_t *)y, incy ) );
+        complex_t const A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( hemv( layout, uplo, 2, alpha, A_, 2, (complex_t const *)x, incx, beta, (complex_t *)y, incy ) );
         CHECK( (y[0] == y[0] && y[1] == y[1]) ); // i.e., they are not NaN
         y[0] = y[1] = 1;
     }}""",
@@ -331,10 +331,10 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is zero" ) {
-        complex_t _A[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( her( layout, uplo, 2, alpha, (complex_t const *)x, incx, _A, 2 ) );
-        CHECK( (_A[0] == _A[0] && _A[1] == _A[1] && _A[2] == _A[2] && _A[3] == _A[3]) ); // i.e., they are not NaN
-        CHECK( (std::imag(_A[0]) == real_t(0) && std::imag(_A[3]) == real_t(0)) );
+        complex_t A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( her( layout, uplo, 2, alpha, (complex_t const *)x, incx, A_, 2 ) );
+        CHECK( (A_[0] == A_[0] && A_[1] == A_[1] && A_[2] == A_[2] && A_[3] == A_[3]) ); // i.e., they are not NaN
+        CHECK( (std::imag(A_[0]) == real_t(0) && std::imag(A_[3]) == real_t(0)) );
     }}""",
         countCases += 2
     elif f_name == "her2":
@@ -342,17 +342,17 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is zero" ) {
-        complex_t _A[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, y, incy, _A, 2 ) );
-        CHECK( (_A[0] == _A[0] && _A[1] == _A[1] && _A[2] == _A[2] && _A[3] == _A[3]) ); // i.e., they are not NaN
-        CHECK( (std::imag(_A[0]) == real_t(0) && std::imag(_A[3]) == real_t(0)) );
+        complex_t A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, y, incy, A_, 2 ) );
+        CHECK( (A_[0] == A_[0] && A_[1] == A_[1] && A_[2] == A_[2] && A_[3] == A_[3]) ); // i.e., they are not NaN
+        CHECK( (std::imag(A_[0]) == real_t(0) && std::imag(A_[3]) == real_t(0)) );
     }}""",
         countCases += 2
     elif f_name == "trmv" or f_name == "trsv":
         buffer += """
     SECTION( "Diagonal of A is not referenced if diag = 'U'" ) {
-        TestType const _A[] = {real_t(NAN), real_t(1), real_t(1), real_t(NAN)};
-        REQUIRE_NOTHROW( """+f_name+"""( layout, uplo, trans, Diag('U'), 2, _A, 2, x, incx ) );
+        TestType const A_[] = {real_t(NAN), real_t(1), real_t(1), real_t(NAN)};
+        REQUIRE_NOTHROW( """+f_name+"""( layout, uplo, trans, Diag('U'), 2, A_, 2, x, incx ) );
         CHECK( (x[0] == x[0] && x[1] == x[1]) ); // i.e., they are not NaN
         x[0] = x[1] = 1;
     }""",
@@ -405,9 +405,9 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of C is zero" ) {
-        complex_t _C[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( herk( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, beta, _C, 2 ) );
-        CHECK( (_C[0] == _C[0] && _C[1] == _C[1] && _C[2] == _C[2] && _C[3] == _C[3]) ); // i.e., they are not NaN
+        complex_t C_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( herk( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, beta, C_, 2 ) );
+        CHECK( (C_[0] == C_[0] && C_[1] == C_[1] && C_[2] == C_[2] && C_[3] == C_[3]) ); // i.e., they are not NaN
     }
     SECTION( "Invalid complex case" ) {
         CHECK_BLAS_THROWS( herk( layout, uplo, Op('T'), n, k, alpha, A, lda, beta, C, ldc ), "trans" );
@@ -424,9 +424,9 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of C is zero" ) {
-        complex_t _C[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( her2k( layout, uplo, trans, 2, 2, alpha, A, 2, B, 2, beta, _C, 2 ) );
-        CHECK( (_C[0] == _C[0] && _C[1] == _C[1] && _C[2] == _C[2] && _C[3] == _C[3]) ); // i.e., they are not NaN
+        complex_t C_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( her2k( layout, uplo, trans, 2, 2, alpha, A, 2, B, 2, beta, C_, 2 ) );
+        CHECK( (C_[0] == C_[0] && C_[1] == C_[1] && C_[2] == C_[2] && C_[3] == C_[3]) ); // i.e., they are not NaN
     }
     SECTION( "Invalid complex case" ) {
         CHECK_BLAS_THROWS( her2k( layout, uplo, Op('T'), n, k, alpha, A, lda, B, ldb, beta, C, ldc ), "trans" );
@@ -437,8 +437,8 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is not referenced" ) {
-        complex_t const _A[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        REQUIRE_NOTHROW( hemm( layout, side, uplo, 2, 2, alpha, _A, 2, B, 2, beta, (complex_t*) C, 2 ) );
+        complex_t const A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
+        REQUIRE_NOTHROW( hemm( layout, side, uplo, 2, 2, alpha, A_, 2, B, 2, beta, (complex_t*) C, 2 ) );
         CHECK( (C[0] == C[0] && C[1] == C[1] && C[2] == C[2] && C[3] == C[3]) ); // i.e., they are not NaN
         std::fill_n(C, """+sizeArray+""", 1);
     }}""",
