@@ -262,7 +262,6 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
                 n, p, real_t(1.0), T, N, x, N );
 
         // Test if NaNs have propagated
-        idx_t nnonNaN = 0;
         for (idx_t j = 0; j < p; ++j) {
             for (idx_t i = 0; i < n; ++i) {
                 if( T_nanRow(i,j) ) {
