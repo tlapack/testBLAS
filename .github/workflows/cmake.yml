@@ -84,6 +84,8 @@ jobs:
 
   test-blaspp-wrappers:
     runs-on: ubuntu-latest
+    env:
+      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
     
     steps:
     
@@ -156,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CXX: icpx
-      CXXFLAGS: "-Wall -pedantic -fp-model=precise"
+      CXXFLAGS: "-Wall -pedantic -fp-model=precise -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
     
     steps:
 
@@ -244,6 +246,7 @@ jobs:
       blis_DIR: ${{github.workspace}}/blis
       lapack_DIR: ${{github.workspace}}/lapack
       LD_LIBRARY_PATH: "/usr/local/lib/"
+      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\" -D LAPACK_FORTRAN_ADD_"
     
     steps:
     
@@ -288,7 +291,7 @@ jobs:
       working-directory: ${{env.lapackpp_DIR}}
       run: |
         git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}} -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_" -D LAPACK_LIBRARIES="${{env.lapack_DIR}}/lib/liblapacke.a;${{env.lapack_DIR}}/lib/liblapack.a;-lgfortran"
+        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}} -D LAPACK_LIBRARIES="${{env.lapack_DIR}}/lib/liblapacke.a;${{env.lapack_DIR}}/lib/liblapack.a;-lgfortran"
         cmake --build build --target install
 
     - name: Checkout <T>LAPACK
@@ -307,7 +310,6 @@ jobs:
       run: >
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_"
         -D Catch2_DIR=${{env.Catch2_DIR}}
         -D tlapack_DIR=${{env.tlapack_DIR}}
 
@@ -323,6 +325,8 @@ jobs:
 
   test-openblas:
     runs-on: ubuntu-latest
+    env:
+      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\" -D LAPACK_FORTRAN_ADD_"
     
     steps:
     
@@ -357,7 +361,7 @@ jobs:
       working-directory: ${{env.lapackpp_DIR}}
       run: |
         git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}} -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_"
+        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
         cmake --build build --target install
 
     - name: Checkout <T>LAPACK
@@ -376,7 +380,6 @@ jobs:
       run: >
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_"
         -D Catch2_DIR=${{env.Catch2_DIR}}
         -D tlapack_DIR=${{env.tlapack_DIR}}
 
