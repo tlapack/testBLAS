@@ -161,6 +161,8 @@ jobs:
     env:
       blaspp_DIR: ${{github.workspace}}/blaspp
       lapackpp_DIR: ${{github.workspace}}/lapackpp
+      CXX: icpx
+      CXXFLAGS: "-Wall -pedantic -fp-model=precise"
     
     steps:
 

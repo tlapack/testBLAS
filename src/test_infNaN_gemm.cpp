@@ -22,7 +22,7 @@ template<typename T>
 constexpr const char* get_func_name() { return __PRETTY_FUNCTION__; }
 
 template<typename T>
-constexpr const std::string get_type_name()
+const std::string get_type_name()
 {
     const std::string s = get_func_name<T>();
     const std::regex rgx(".*T = (.*)\\]");
