@@ -86,7 +86,7 @@ file( GLOB test_sources
 add_executable( tester ${test_sources} )
 
 target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tblas )
+target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tlapack )
 
 if( TEST_MPFR )
   target_compile_definitions( tester PRIVATE USE_MPFR )

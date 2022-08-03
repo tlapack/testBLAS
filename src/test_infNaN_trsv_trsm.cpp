@@ -16,9 +16,9 @@
 #include <complex>
 #include <sstream>
 
-#include <legacy_api/blas.hpp>
+#include <tlapack/legacy_api/blas.hpp>
 #ifdef USE_MPFR
-    #include <plugins/tlapack_mpreal.hpp>
+    #include <tlapack/plugins/mpreal.hpp>
 #endif
 using namespace tlapack;
     
