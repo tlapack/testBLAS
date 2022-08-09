@@ -258,6 +258,15 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         buffer += bufferRequireNoChanges
 
     # Specific tests Lv1:
+    if f_name == "axpy":
+        buffer += """
+    SECTION ( "x is not referenced if alpha = 0" ) {
+        TestType const x_[] = {real_t(NAN), real_t(NAN)};
+        axpy( n, real_t(0), x_, incx, y, incy );
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = real_t(1);
+    }""",
+        countCases += 1
     if f_name == "rotmg":
         buffer += """
     SECTION ( "Throw if d1 == -1" ) {
@@ -298,12 +307,48 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         y[0] = y[1] = real_t(NAN);
         """,
         if f_name == "gemv":
-            buffer += "gemv( layout, trans, 2, 2, alpha, A, 2, x, incx, real_t(0), y, incy );",
+            buffer += "gemv( layout, trans, 2, 2, alpha, A, 2, x, incx, real_t(0), y, 1 );",
         else:
-            buffer += f_name + "( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, incy );",
+            buffer += f_name + "( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, 1 );",
         buffer += """
         CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
         y[0] = y[1] = 1;
+    }
+    SECTION( "A and x do not need to be set if alpha = 0" ) {
+        const TestType A_[] = {real_t(NAN), real_t(NAN), real_t(NAN), real_t(NAN)};
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        """,
+        if f_name == "gemv":
+            buffer += f_name + "( layout, trans, 2, 2, real_t(0), A_, 2, x_, 1, beta, y, 1 );",
+        else:
+            buffer += f_name + "( layout, uplo, 2, real_t(0), A_, 2, x_, 1, beta, y, 1 );",
+        buffer += """
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = 1;
+    }""",
+        countCases += 1
+    elif f_name == "ger" or f_name == "geru" or f_name == "syr2" or f_name == "her2":
+        buffer += """
+    SECTION( "x and y do not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        const TestType y_[] = {real_t(NAN), real_t(NAN)};
+        """,
+        if f_name == "ger" or f_name == "geru":
+            buffer += f_name + "( layout, 2, 2, real_t(0), x_, 1, y_, 1, A, 2 );",
+        else:
+            buffer += f_name + "( layout, uplo, 2, real_t(0), x_, 1, y_, 1, A, 2 );",
+        buffer += """
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, """+sizeArray+""", 1);
+    }""",
+        countCases += 1
+    elif f_name == "syr" or f_name == "her":
+        buffer += """
+    SECTION( "x does not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        """ + f_name + """( layout, uplo, 2, real_t(0), x_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, """+sizeArray+""", 1);
     }""",
         countCases += 1
 

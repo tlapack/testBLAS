@@ -87,6 +87,12 @@ TEMPLATE_TEST_CASE( "axpy satisfies all corner cases", "[axpy][BLASlv1]", TEST_T
         CHECK( (std::equal(y, y+5, ref_y)) );
         std::swap( y, ref_y );
     }
+    SECTION ( "x is not referenced if alpha = 0" ) {
+        TestType const x_[] = {real_t(NAN), real_t(NAN)};
+        axpy( n, real_t(0), x_, incx, y, incy );
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = real_t(1);
+    }
 }
 
 TEMPLATE_TEST_CASE( "copy satisfies all corner cases", "[copy][BLASlv1]", TEST_TYPES ) {
@@ -415,7 +421,14 @@ TEMPLATE_TEST_CASE( "gemv satisfies all corner cases", "[gemv][BLASlv2]", TEST_T
     }
     SECTION( "y does not need to be set if beta = 0" ) {
         y[0] = y[1] = real_t(NAN);
-        gemv( layout, trans, 2, 2, alpha, A, 2, x, incx, real_t(0), y, incy );
+        gemv( layout, trans, 2, 2, alpha, A, 2, x, incx, real_t(0), y, 1 );
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = 1;
+    }
+    SECTION( "A and x do not need to be set if alpha = 0" ) {
+        const TestType A_[] = {real_t(NAN), real_t(NAN), real_t(NAN), real_t(NAN)};
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        gemv( layout, trans, 2, 2, real_t(0), A_, 2, x_, 1, beta, y, 1 );
         CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
         y[0] = y[1] = 1;
     }
@@ -462,6 +475,13 @@ TEMPLATE_TEST_CASE( "ger satisfies all corner cases", "[ger][BLASlv2]", TEST_TYP
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
     }
+    SECTION( "x and y do not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        const TestType y_[] = {real_t(NAN), real_t(NAN)};
+        ger( layout, 2, 2, real_t(0), x_, 1, y_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
+    }
 }
 
 TEMPLATE_TEST_CASE( "geru satisfies all corner cases", "[geru][BLASlv2]", TEST_TYPES ) {
@@ -505,6 +525,13 @@ TEMPLATE_TEST_CASE( "geru satisfies all corner cases", "[geru][BLASlv2]", TEST_T
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
     }
+    SECTION( "x and y do not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        const TestType y_[] = {real_t(NAN), real_t(NAN)};
+        geru( layout, 2, 2, real_t(0), x_, 1, y_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
+    }
 }
 
 TEMPLATE_TEST_CASE( "hemv satisfies all corner cases", "[hemv][BLASlv2]", TEST_TYPES ) {
@@ -543,7 +570,14 @@ TEMPLATE_TEST_CASE( "hemv satisfies all corner cases", "[hemv][BLASlv2]", TEST_T
     }
     SECTION( "y does not need to be set if beta = 0" ) {
         y[0] = y[1] = real_t(NAN);
-        hemv( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, incy );
+        hemv( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, 1 );
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = 1;
+    }
+    SECTION( "A and x do not need to be set if alpha = 0" ) {
+        const TestType A_[] = {real_t(NAN), real_t(NAN), real_t(NAN), real_t(NAN)};
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        hemv( layout, uplo, 2, real_t(0), A_, 2, x_, 1, beta, y, 1 );
         CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
         y[0] = y[1] = 1;
     }
@@ -593,6 +627,12 @@ TEMPLATE_TEST_CASE( "her satisfies all corner cases", "[her][BLASlv2]", TEST_TYP
         REQUIRE_NOTHROW( her( layout, uplo, n, real_t(0), x, incx, A, lda ) );
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
+    }
+    SECTION( "x does not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        her( layout, uplo, 2, real_t(0), x_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
     }
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
@@ -644,6 +684,13 @@ TEMPLATE_TEST_CASE( "her2 satisfies all corner cases", "[her2][BLASlv2]", TEST_T
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
     }
+    SECTION( "x and y do not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        const TestType y_[] = {real_t(NAN), real_t(NAN)};
+        her2( layout, uplo, 2, real_t(0), x_, 1, y_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
+    }
     if (is_complex<TestType>::value) {
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is zero" ) {
@@ -690,7 +737,14 @@ TEMPLATE_TEST_CASE( "symv satisfies all corner cases", "[symv][BLASlv2]", TEST_R
     }
     SECTION( "y does not need to be set if beta = 0" ) {
         y[0] = y[1] = real_t(NAN);
-        symv( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, incy );
+        symv( layout, uplo, 2, alpha, A, 2, x, incx, real_t(0), y, 1 );
+        CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
+        y[0] = y[1] = 1;
+    }
+    SECTION( "A and x do not need to be set if alpha = 0" ) {
+        const TestType A_[] = {real_t(NAN), real_t(NAN), real_t(NAN), real_t(NAN)};
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        symv( layout, uplo, 2, real_t(0), A_, 2, x_, 1, beta, y, 1 );
         CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
         y[0] = y[1] = 1;
     }
@@ -733,6 +787,12 @@ TEMPLATE_TEST_CASE( "syr satisfies all corner cases", "[syr][BLASlv2]", TEST_REA
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
     }
+    SECTION( "x does not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        syr( layout, uplo, 2, real_t(0), x_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
+    }
 }
 
 TEMPLATE_TEST_CASE( "syr2 satisfies all corner cases", "[syr2][BLASlv2]", TEST_TYPES ) {
@@ -774,6 +834,13 @@ TEMPLATE_TEST_CASE( "syr2 satisfies all corner cases", "[syr2][BLASlv2]", TEST_T
         REQUIRE_NOTHROW( syr2( layout, uplo, n, real_t(0), x, incx, y, incy, A, lda ) );
         CHECK( (std::equal(A, A+5, ref_A)) );
         std::swap( A, ref_A );
+    }
+    SECTION( "x and y do not need to be set if alpha = 0" ) {
+        const TestType x_[] = {real_t(NAN), real_t(NAN)};
+        const TestType y_[] = {real_t(NAN), real_t(NAN)};
+        syr2( layout, uplo, 2, real_t(0), x_, 1, y_, 1, A, 2 );
+        CHECK( (!isnan(A[0]) && !isnan(A[1]) && !isnan(A[2]) && !isnan(A[3])) ); // i.e., they are not NaN
+        std::fill_n(A, 5, 1);
     }
 }
 
