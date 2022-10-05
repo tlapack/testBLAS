@@ -8,23 +8,23 @@
 #define TESTBLAS_DEFINES_HH
 
 #include <complex>
+#include <cstdint> // Defines std::int64_t
 
 #ifndef TEST_REAL_STD_TYPES
     #define TEST_REAL_STD_TYPES \
         float, \
-        double, \
-        long double
+        double
 #endif
 
 #ifndef TEST_CPLX_STD_TYPES
     #define TEST_CPLX_STD_TYPES \
         std::complex<float>, \
-        std::complex<double>, \
-        std::complex<long double>
+        std::complex<double>
 #endif
 
 //-----------------------------------------------------------------------------
 #ifdef USE_MPFR
+    #include <tlapack/plugins/mpreal.hpp>
     #ifndef TEST_REAL_TYPES
         #define TEST_REAL_TYPES TEST_REAL_STD_TYPES, mpfr::mpreal
     #endif
@@ -46,6 +46,16 @@
 #endif
 #ifndef TEST_STD_TYPES
     #define TEST_STD_TYPES TEST_REAL_STD_TYPES, TEST_CPLX_STD_TYPES
+#endif
+
+//-----------------------------------------------------------------------------
+#ifndef TEST_BLAS_WRAPPERS_HH
+    #define TEST_BLAS_WRAPPERS_HH
+
+    #include "blas.hpp"
+    
+    using idx_t = std::int64_t;
+    using int_t = std::int64_t;
 #endif
 
 #endif // TESTBLAS_DEFINES_HH

@@ -8,18 +8,13 @@
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
 #include <catch2/catch_template_test_macros.hpp>
-#include <tlapack/legacy_api/blas.hpp>
-#include "defines.hpp"
-#include "utils.hpp"
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
-
 #include <limits>
 #include <vector>
 #include <complex>
 
-using namespace tlapack;
+#include "utils.hpp"
+
+using namespace testBLAS;
 
 // -----------------------------------------------------------------------------
 // Auxiliary routines

@@ -32,9 +32,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #-------------------------------------------------------------------------------
 # Packages
 
-# Load <T>LAPACK
-if( NOT TARGET tlapack )
-  find_package( tlapack REQUIRED HINTS ${tlapack_DIR} )
+# Load C++ BLAS wrappers
+if( NOT TARGET blaspp )
+  find_package( blaspp REQUIRED )
 endif()
 
 # Load Catch2
@@ -86,7 +86,7 @@ file( GLOB test_sources
 add_executable( tester ${test_sources} )
 
 target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-target_link_libraries( tester PRIVATE Catch2::Catch2WithMain tlapack )
+target_link_libraries( tester PRIVATE Catch2::Catch2WithMain blaspp )
 
 if( TEST_MPFR )
   target_compile_definitions( tester PRIVATE USE_MPFR )

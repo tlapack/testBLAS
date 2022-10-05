@@ -90,11 +90,8 @@ print("""\
 
 #include <type_traits>
 #include <catch2/catch_template_test_macros.hpp>
-#include <tlapack/legacy_api/blas.hpp>
-#include "defines.hpp"
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
+
+#include "utils.hpp"
 
 #if defined(BLAS_ERROR_NDEBUG) || defined(NDEBUG)
     #define CHECK_BLAS_THROWS( expr, str ) \\
@@ -109,7 +106,7 @@ print("""\
     #endif
 #endif
 
-using namespace tlapack;""")
+using namespace testBLAS;""")
 
 # ------------------------------------------------------------------------------
 # Loop in the functions
@@ -265,13 +262,6 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         axpy( n, real_t(0), x_, incx, y, incy );
         CHECK( (!isnan(y[0]) && !isnan(y[1])) ); // i.e., they are not NaN
         y[0] = y[1] = real_t(1);
-    }""",
-        countCases += 1
-    if f_name == "rotmg":
-        buffer += """
-    SECTION ( "Throw if d1 == -1" ) {
-        real_t d1Minus1 = real_t(-1);
-        CHECK_BLAS_THROWS( rotmg( &d1Minus1, d2, a, b, param ), "d1" );
     }""",
         countCases += 1
     elif f_name == "dot" or f_name == "dotu":

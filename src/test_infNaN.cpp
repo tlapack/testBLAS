@@ -4,19 +4,13 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include "defines.hpp"
 #include "utils.hpp"
 
 #include <catch2/catch_template_test_macros.hpp>
 #include <limits>
 #include <iostream>
 
-#include <tlapack/legacy_api/blas.hpp>
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
-
-using namespace tlapack;
+using namespace testBLAS;
 
 TEMPLATE_TEST_CASE( "NANs work as expected", "[NaN]", TEST_TYPES ) {
     
@@ -50,29 +44,29 @@ TEMPLATE_TEST_CASE( "Infs work as expected", "[Inf]", TEST_TYPES ) {
     }
 }
 
-TEMPLATE_TEST_CASE( "tlapack::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
+// TEMPLATE_TEST_CASE( "tlapack::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
     
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
+//     std::vector<TestType> nan_vec;
+//     testBLAS::set_nan_vector( nan_vec );
     
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
+//     std::vector<TestType> inf_vec;
+//     testBLAS::set_inf_vector( inf_vec );
 
-    SECTION( "isnan(tlapack::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec)
-            CHECK( isnan(tlapack::abs(x)) );
-    }
+//     SECTION( "isnan(tlapack::abs(NAN)) == true" ) {
+//         for (const auto& x : nan_vec)
+//             CHECK( isnan(tlapack::abs(x)) );
+//     }
 
-    SECTION( "isinf(tlapack::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec)
-            CHECK( isinf(tlapack::abs(x)) );
-    }
+//     SECTION( "isinf(tlapack::abs(Inf)) == true" ) {
+//         for (const auto& x : inf_vec)
+//             CHECK( isinf(tlapack::abs(x)) );
+//     }
 
-    SECTION( "isinf(tlapack::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec)
-            CHECK( !isinf(tlapack::abs(x)) );
-    }
-}
+//     SECTION( "isinf(tlapack::abs(NAN)) == false" ) {
+//         for (const auto& x : nan_vec)
+//             CHECK( !isinf(tlapack::abs(x)) );
+//     }
+// }
 
 TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES ) {
     typedef real_type<TestType> real_t;
@@ -117,7 +111,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            real_t y = abs(x);
+            real_t y = std::abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
@@ -125,7 +119,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            real_t y = abs(x);
+            real_t y = std::abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
@@ -133,7 +127,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            real_t y = abs(x);
+            real_t y = std::abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
@@ -141,7 +135,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            real_t y = abs(x);
+            real_t y = std::abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }

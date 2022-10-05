@@ -12,11 +12,8 @@
 
 #include <type_traits>
 #include <catch2/catch_template_test_macros.hpp>
-#include <tlapack/legacy_api/blas.hpp>
-#include "defines.hpp"
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
+
+#include "utils.hpp"
 
 #if defined(BLAS_ERROR_NDEBUG) || defined(NDEBUG)
     #define CHECK_BLAS_THROWS( expr, str ) \
@@ -31,7 +28,7 @@
     #endif
 #endif
 
-using namespace tlapack;
+using namespace testBLAS;
 
 TEMPLATE_TEST_CASE( "asum satisfies all corner cases", "[asum][BLASlv1]", TEST_TYPES ) {
     using real_t = real_type<TestType>;
@@ -293,6 +290,7 @@ TEMPLATE_TEST_CASE( "rotm satisfies all corner cases", "[rotm][BLASlv1]", TEST_R
     }
 }
 
+/*
 TEMPLATE_TEST_CASE( "rotmg satisfies all corner cases", "[rotmg][BLASlv1]", TEST_REAL_TYPES ) {
     using real_t = real_type<TestType>;
     
@@ -304,11 +302,7 @@ TEMPLATE_TEST_CASE( "rotmg satisfies all corner cases", "[rotmg][BLASlv1]", TEST
     TestType param[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
 
     // Corner cases:
-    SECTION ( "Throw if d1 == -1" ) {
-        real_t d1Minus1 = real_t(-1);
-        CHECK_BLAS_THROWS( rotmg( &d1Minus1, d2, a, b, param ), "d1" );
-    }
-}
+} */
 
 TEMPLATE_TEST_CASE( "scal satisfies all corner cases", "[scal][BLASlv1]", TEST_TYPES ) {
     using real_t = real_type<TestType>;

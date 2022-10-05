@@ -7,19 +7,14 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include <tlapack/legacy_api/blas.hpp>
-#include "defines.hpp"
 #include "utils.hpp"
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
 
 #include <catch2/catch_template_test_macros.hpp>
 #include <limits>
 #include <vector>
 #include <complex>
 
-using namespace tlapack;
+using namespace testBLAS;
 
 // -----------------------------------------------------------------------------
 // Test cases for nrm2 with Infs and NaNs at specific positions
@@ -63,7 +58,7 @@ real_type<TestType> test_worst_case( const idx_t n, TestType A[], real_type<Test
     using real_t = real_type<TestType>;
 
     real_t nrm2ofA  = nrm2( n, A, 1 );
-    real_t relError = tlapack::abs( (nrm2ofA - trueNorm) / trueNorm );
+    real_t relError = abs( (nrm2ofA - trueNorm) / trueNorm );
     
     INFO( "n = " << n );
     INFO( "Rel. error = " << std::scientific << relError );

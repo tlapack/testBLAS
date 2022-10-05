@@ -7,7 +7,6 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include "defines.hpp"
 #include "utils.hpp"
 
 #include <catch2/catch_template_test_macros.hpp>
@@ -16,11 +15,7 @@
 #include <complex>
 #include <sstream>
 
-#include <tlapack/legacy_api/blas.hpp>
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
-using namespace tlapack;
+using namespace testBLAS;
     
 // Constants
 const idx_t N        = 128; // Number of rows

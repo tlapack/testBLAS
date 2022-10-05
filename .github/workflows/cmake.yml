@@ -24,68 +24,68 @@ defaults:
 
 jobs:
 
-  test-tlapack-templates:
-    # Use GNU compilers
+  # test-tlapack-templates:
+  #   # Use GNU compilers
   
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+  #   # The CMake configure and build commands are platform agnostic and should work equally
+  #   # well on Windows or Mac.  You can convert this to a matrix build if you need
+  #   # cross-platform coverage.
+  #   # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
     
-    steps:
+  #   steps:
     
-    - name: Checkout testBLAS
-      uses: actions/checkout@v2
+  #   - name: Checkout testBLAS
+  #     uses: actions/checkout@v2
 
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+  #   - name: Install ninja-build tool
+  #     uses: seanmiddleditch/gha-setup-ninja@v3
 
-    - name: Install MPFR C++
-      run: sudo apt install libmpfrc++-dev
+  #   - name: Install MPFR C++
+  #     run: sudo apt install libmpfrc++-dev
 
-    - name: Checkout Catch2
-      uses: actions/checkout@v2
-      with:
-        repository: catchorg/Catch2
-        path: Catch2
+  #   - name: Checkout Catch2
+  #     uses: actions/checkout@v2
+  #     with:
+  #       repository: catchorg/Catch2
+  #       path: Catch2
 
-    - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
-      with:
-        repository: tlapack/tlapack
-        path: tlapack
+  #   - name: Checkout <T>LAPACK
+  #     uses: actions/checkout@v2
+  #     with:
+  #       repository: tlapack/tlapack
+  #       path: tlapack
 
-    - name: Build and install <T>LAPACK
-      working-directory: ${{env.tlapack_DIR}}
-      run: |
-        cmake -Bbuild -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
-        cmake --build build --target install
+  #   - name: Build and install <T>LAPACK
+  #     working-directory: ${{env.tlapack_DIR}}
+  #     run: |
+  #       cmake -Bbuild -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+  #       cmake --build build --target install
 
-    - name: Configure testBLAS
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: >
-        cmake -B build -GNinja
-        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -D TEST_MPFR=ON
-        -D Catch2_DIR=${{env.Catch2_DIR}}
-        -D tlapack_DIR=${{env.tlapack_DIR}}
+  #   - name: Configure testBLAS
+  #     # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+  #     # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+  #     run: >
+  #       cmake -B build -GNinja
+  #       -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+  #       -D TEST_MPFR=ON
+  #       -D Catch2_DIR=${{env.Catch2_DIR}}
+  #       -D tlapack_DIR=${{env.tlapack_DIR}}
 
-    - name: Build testBLAS
-      # Build your program with the given configuration
-      run: cmake --build build --config ${{env.BUILD_TYPE}}
+  #   - name: Build testBLAS
+  #     # Build your program with the given configuration
+  #     run: cmake --build build --config ${{env.BUILD_TYPE}}
 
-    # Mind that the job won't fail if only this step fails
-    - name: Run tests
-      working-directory: ${{github.workspace}}/build
-      continue-on-error: true
-      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+  #   # Mind that the job won't fail if only this step fails
+  #   - name: Run tests
+  #     working-directory: ${{github.workspace}}/build
+  #     continue-on-error: true
+  #     run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
   test-blaspp-wrappers:
     runs-on: ubuntu-latest
-    env:
-      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
     
     steps:
     
@@ -104,35 +104,14 @@ jobs:
     - name: Install Reference BLAS
       run: sudo apt install libblas-dev
 
-    - name: Checkout BLAS++ and LAPACK++
+    - name: Checkout BLAS++
       run: |
         git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
-        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
 
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout tlapack
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
-        cmake --build build --target install
-
-    - name: Build and install LAPACK++
-      working-directory: ${{env.lapackpp_DIR}}
-      run: |
-        git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
-        cmake --build build --target install
-
-    - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
-      with:
-        repository: tlapack/tlapack
-        path: tlapack
-
-    - name: Build and install <T>LAPACK
-      working-directory: ${{env.tlapack_DIR}}
-      run: |
-        cmake -Bbuild -GNinja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
     - name: Configure testBLAS
@@ -142,7 +121,7 @@ jobs:
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -D Catch2_DIR=${{env.Catch2_DIR}}
-        -D tlapack_DIR=${{env.tlapack_DIR}}
+        -D blaspp_DIR=${{env.blaspp_DIR}}
 
     - name: Build testBLAS
       # Build your program with the given configuration
@@ -158,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CXX: icpx
-      CXXFLAGS: "-Wall -pedantic -fp-model=precise -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
+      CXXFLAGS: "-Wall -pedantic -fp-model=precise"
     
     steps:
 
@@ -192,35 +171,14 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         printenv >> $GITHUB_ENV
 
-    - name: Checkout BLAS++ and LAPACK++
+    - name: Checkout BLAS++
       run: |
         git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
-        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
 
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout tlapack
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
-        cmake --build build --target install
-
-    - name: Build and install LAPACK++
-      working-directory: ${{env.lapackpp_DIR}}
-      run: |
-        git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
-        cmake --build build --target install
-
-    - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
-      with:
-        repository: tlapack/tlapack
-        path: tlapack
-
-    - name: Build and install <T>LAPACK
-      working-directory: ${{env.tlapack_DIR}}
-      run: |
-        cmake -B build -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
     - name: Configure testBLAS
@@ -228,7 +186,7 @@ jobs:
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -D Catch2_DIR=${{env.Catch2_DIR}}
-        -D tlapack_DIR=${{env.tlapack_DIR}}
+        -D blaspp_DIR=${{env.blaspp_DIR}}
 
     - name: Build testBLAS
       # Build your program with the given configuration
@@ -246,7 +204,7 @@ jobs:
       blis_DIR: ${{github.workspace}}/blis
       lapack_DIR: ${{github.workspace}}/lapack
       LD_LIBRARY_PATH: "/usr/local/lib/"
-      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\" -D LAPACK_FORTRAN_ADD_"
+      CXXFLAGS: "-Wall -pedantic -D LAPACK_FORTRAN_ADD_"
     
     steps:
     
@@ -275,35 +233,14 @@ jobs:
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -D CMAKE_INSTALL_PREFIX=${{env.lapack_DIR}} -D USE_OPTIMIZED_BLAS=ON -D BLA_VENDOR=FLAME -D LAPACKE=ON -D CBLAS=ON
         cmake --build build --target install
 
-    - name: Checkout BLAS++ and LAPACK++
+    - name: Checkout BLAS++
       run: |
         git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
-        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
 
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout tlapack
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=FLAME -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
-        cmake --build build --target install
-
-    - name: Build and install LAPACK++
-      working-directory: ${{env.lapackpp_DIR}}
-      run: |
-        git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}} -D LAPACK_LIBRARIES="${{env.lapack_DIR}}/lib/liblapacke.a;${{env.lapack_DIR}}/lib/liblapack.a;-lgfortran"
-        cmake --build build --target install
-
-    - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
-      with:
-        repository: tlapack/tlapack
-        path: tlapack
-
-    - name: Build and install <T>LAPACK
-      working-directory: ${{env.tlapack_DIR}}
-      run: |
-        cmake -B build -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
     - name: Configure testBLAS
@@ -311,7 +248,7 @@ jobs:
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -D Catch2_DIR=${{env.Catch2_DIR}}
-        -D tlapack_DIR=${{env.tlapack_DIR}}
+        -D blaspp_DIR=${{env.blaspp_DIR}}
 
     - name: Build testBLAS
       # Build your program with the given configuration
@@ -326,7 +263,7 @@ jobs:
   test-openblas:
     runs-on: ubuntu-latest
     env:
-      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\" -D LAPACK_FORTRAN_ADD_"
+      CXXFLAGS: "-Wall -pedantic -D LAPACK_FORTRAN_ADD_"
     
     steps:
     
@@ -345,35 +282,14 @@ jobs:
     - name: Install OpenBLAS
       run: sudo apt install libopenblas-dev
 
-    - name: Checkout BLAS++ and LAPACK++
+    - name: Checkout BLAS++
       run: |
         git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
-        git clone https://bitbucket.org/weslleyspereira/lapackpp ${{env.lapackpp_DIR}}
 
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout tlapack
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
-        cmake --build build --target install
-
-    - name: Build and install LAPACK++
-      working-directory: ${{env.lapackpp_DIR}}
-      run: |
-        git checkout tlapack
-        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.lapackpp_DIR}}
-        cmake --build build --target install
-
-    - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
-      with:
-        repository: tlapack/tlapack
-        path: tlapack
-
-    - name: Build and install <T>LAPACK
-      working-directory: ${{env.tlapack_DIR}}
-      run: |
-        cmake -B build -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DUSE_LAPACKPP_WRAPPERS=ON -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
         cmake --build build --target install
 
     - name: Configure testBLAS
@@ -381,7 +297,7 @@ jobs:
         cmake -B build -G Ninja
         -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -D Catch2_DIR=${{env.Catch2_DIR}}
-        -D tlapack_DIR=${{env.tlapack_DIR}}
+        -D blaspp_DIR=${{env.blaspp_DIR}}
 
     - name: Build testBLAS
       # Build your program with the given configuration
