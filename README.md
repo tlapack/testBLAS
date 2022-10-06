@@ -68,14 +68,11 @@ Here are the testBLAS specific options and their default values
 
     # Option                         # Default
 
-    BUILD_EXAMPLES                   ON
+    TESTBLAS_BLAS                    blaspp
         
-        Build examples
-    
-    TEST_MPFR                        OFF
-
-        Use mpreal from MPFR C++ library
-        (http://www.holoborodko.com/pavel/mpfr/) for testing.
+        C++ package used to access BLAS routines.
+        Supported packages:
+            blaspp, tlapack
 
 ## Testing
 

@@ -22,7 +22,10 @@ message(STATUS "testBLAS version " ${PROJECT_VERSION})
 #-------------------------------------------------------------------------------
 # Options
 
-option( TEST_MPFR "Use mpreal from MPFR C++ library (http://www.holoborodko.com/pavel/mpfr/) for testing." OFF )
+set( cpp_blas_lib blaspp tlapack )
+
+set( TESTBLAS_BLAS blaspp CACHE STRING "C++ package used to access BLAS routines." )
+set_property( CACHE TESTBLAS_BLAS PROPERTY STRINGS ${cpp_blas_lib} )
 
 #-------------------------------------------------------------------------------
 # Modules
@@ -33,8 +36,8 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # Packages
 
 # Load C++ BLAS wrappers
-if( NOT TARGET blaspp )
-  find_package( blaspp REQUIRED )
+if( NOT TARGET ${TESTBLAS_BLAS} )
+  find_package( ${TESTBLAS_BLAS} REQUIRED )
 endif()
 
 # Load Catch2
@@ -44,26 +47,6 @@ if( EXISTS "${Catch2_SOURCE_DIR}" )
   list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
 else()
   list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
-endif()
-
-# Search for MPFR library if TEST_MPFR = ON
-if( TEST_MPFR )
-  
-  find_package( GMP  4.2.1 REQUIRED ) # Load GMP
-  find_package( MPFR 2.3.1 REQUIRED ) # Load MPFR
-  
-  # Verify if mpreal.h is installed
-  find_path( MPREAL_PATH
-    NAMES mpreal.h
-    PATHS ${MPFR_INCLUDES} ${GMP_INCLUDES} )
-  
-  # Abort if mpreal.h is not installed
-  if( MPREAL_PATH-NOTFOUND )
-    message( FATAL_ERROR "MPFR C++ (MPREAL) not found. Try installing mpreal.h from
-    (1) https://github.com/advanpix/mpreal,
- or (2) http://www.holoborodko.com/pavel/mpfr." )
-  endif()
-
 endif()
 
 #-------------------------------------------------------------------------------
@@ -86,12 +69,11 @@ file( GLOB test_sources
 add_executable( tester ${test_sources} )
 
 target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-target_link_libraries( tester PRIVATE Catch2::Catch2WithMain blaspp )
-
-if( TEST_MPFR )
-  target_compile_definitions( tester PRIVATE USE_MPFR )
-  target_include_directories( tester PRIVATE ${MPFR_INCLUDES} ${GMP_INCLUDES} )
-  target_link_libraries( tester PRIVATE ${MPFR_LIBRARIES} ${GMP_LIBRARIES} )
+target_link_libraries( tester PRIVATE Catch2::Catch2WithMain ${TESTBLAS_BLAS} )
+if( TESTBLAS_BLAS STREQUAL "tlapack" )
+  target_compile_definitions( tester PRIVATE TESTBLAS_USE_TLAPACK )
+else()
+  target_compile_definitions( tester PRIVATE TESTBLAS_USE_BLASPP )
 endif()
 
 # Add tests to CTest

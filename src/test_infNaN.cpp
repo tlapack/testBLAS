@@ -44,31 +44,7 @@ TEMPLATE_TEST_CASE( "Infs work as expected", "[Inf]", TEST_TYPES ) {
     }
 }
 
-// TEMPLATE_TEST_CASE( "tlapack::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
-    
-//     std::vector<TestType> nan_vec;
-//     testBLAS::set_nan_vector( nan_vec );
-    
-//     std::vector<TestType> inf_vec;
-//     testBLAS::set_inf_vector( inf_vec );
-
-//     SECTION( "isnan(tlapack::abs(NAN)) == true" ) {
-//         for (const auto& x : nan_vec)
-//             CHECK( isnan(tlapack::abs(x)) );
-//     }
-
-//     SECTION( "isinf(tlapack::abs(Inf)) == true" ) {
-//         for (const auto& x : inf_vec)
-//             CHECK( isinf(tlapack::abs(x)) );
-//     }
-
-//     SECTION( "isinf(tlapack::abs(NAN)) == false" ) {
-//         for (const auto& x : nan_vec)
-//             CHECK( !isinf(tlapack::abs(x)) );
-//     }
-// }
-
-TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES ) {
+TEMPLATE_TEST_CASE( "abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
     typedef real_type<TestType> real_t;
     
     std::vector<TestType> nan_vec;
@@ -77,41 +53,9 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
 
-    SECTION( "isnan(std::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isnan(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isinf(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isinf(y) );
-        }
-    }
-
-    SECTION( "isnan(std::abs(Inf)) == false" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isnan(y) );
-        }
-    }
-
     SECTION( "isnan(abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
@@ -119,7 +63,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
@@ -127,7 +71,7 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isinf(abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
@@ -135,7 +79,39 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
 
     SECTION( "isnan(abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
+            CHECK( !isnan(y) );
+        }
+    }
+
+    SECTION( "isnan(abs(NAN)) == true" ) {
+        for (const auto& x : nan_vec) {
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
+            CHECK( isnan(y) );
+        }
+    }
+
+    SECTION( "isinf(abs(Inf)) == true" ) {
+        for (const auto& x : inf_vec) {
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
+            CHECK( isinf(y) );
+        }
+    }
+
+    SECTION( "isinf(abs(NAN)) == false" ) {
+        for (const auto& x : nan_vec) {
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
+            CHECK( !isinf(y) );
+        }
+    }
+
+    SECTION( "isnan(abs(Inf)) == false" ) {
+        for (const auto& x : inf_vec) {
+            real_t y = abs(x);
             INFO( "abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }
@@ -202,72 +178,3 @@ TEMPLATE_TEST_CASE( "Complex division works as expected", "[NaN][Inf]", TEST_TYP
         }
     }
 }
-
-#ifdef USE_MPFR
-TEST_CASE( "mpfr::abs works as expected", "[NaN][Inf]" ) {
-    typedef mpfr::mpreal TestType;
-    
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
-    
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
-
-    SECTION( "isnan(mpfr::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec)
-            CHECK( isnan(mpfr::abs(x)) );
-    }
-
-    SECTION( "isinf(mpfr::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec)
-            CHECK( isinf(mpfr::abs(x)) );
-    }
-
-    SECTION( "isinf(mpfr::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec)
-            CHECK( !isinf(mpfr::abs(x)) );
-    }
-}
-TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]") {
-    typedef std::complex<mpfr::mpreal> TestType;
-    typedef mpfr::mpreal real_t;
-    
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
-    
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
-
-    SECTION( "isnan(std::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isnan(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isinf(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isinf(y) );
-        }
-    }
-
-    SECTION( "isnan(std::abs(Inf)) == false" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isnan(y) );
-        }
-    }
-}
-#endif

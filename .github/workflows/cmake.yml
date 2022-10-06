@@ -14,7 +14,6 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
   blaspp_DIR: ${{github.workspace}}/blaspp
-  lapackpp_DIR: ${{github.workspace}}/lapackpp
   tlapack_DIR: ${{github.workspace}}/tlapack
   Catch2_DIR: ${{github.workspace}}/Catch2
 
@@ -24,65 +23,62 @@ defaults:
 
 jobs:
 
-  # test-tlapack-templates:
-  #   # Use GNU compilers
+  test-tlapack-templates:
+    # Use GNU compilers
   
-  #   # The CMake configure and build commands are platform agnostic and should work equally
-  #   # well on Windows or Mac.  You can convert this to a matrix build if you need
-  #   # cross-platform coverage.
-  #   # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     CXXFLAGS: "-Wall -pedantic -D TEST_REAL_STD_TYPES=\"float, double\" -D TEST_CPLX_STD_TYPES=\"std::complex<float>, std::complex<double>\""
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+    env:
+      CXXFLAGS: "-Wall -pedantic -D TEST_REAL_TYPES=\"float, double, long double\" -D TEST_CPLX_TYPES=\"std::complex<float>, std::complex<double>, std::complex<long double>\""
     
-  #   steps:
+    steps:
     
-  #   - name: Checkout testBLAS
-  #     uses: actions/checkout@v2
+    - name: Checkout testBLAS
+      uses: actions/checkout@v2
 
-  #   - name: Install ninja-build tool
-  #     uses: seanmiddleditch/gha-setup-ninja@v3
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@v3
 
-  #   - name: Install MPFR C++
-  #     run: sudo apt install libmpfrc++-dev
+    - name: Checkout Catch2
+      uses: actions/checkout@v2
+      with:
+        repository: catchorg/Catch2
+        path: Catch2
 
-  #   - name: Checkout Catch2
-  #     uses: actions/checkout@v2
-  #     with:
-  #       repository: catchorg/Catch2
-  #       path: Catch2
+    - name: Checkout <T>LAPACK
+      uses: actions/checkout@v2
+      with:
+        repository: tlapack/tlapack
+        path: tlapack
 
-  #   - name: Checkout <T>LAPACK
-  #     uses: actions/checkout@v2
-  #     with:
-  #       repository: tlapack/tlapack
-  #       path: tlapack
+    - name: Build and install <T>LAPACK
+      working-directory: ${{env.tlapack_DIR}}
+      run: |
+        cmake -Bbuild -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
+        cmake --build build --target install
 
-  #   - name: Build and install <T>LAPACK
-  #     working-directory: ${{env.tlapack_DIR}}
-  #     run: |
-  #       cmake -Bbuild -G Ninja -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${{env.tlapack_DIR}}
-  #       cmake --build build --target install
+    - name: Configure testBLAS
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B build -GNinja
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -D TESTBLAS_BLAS=tlapack
+        -D Catch2_DIR=${{env.Catch2_DIR}}
+        -D tlapack_DIR=${{env.tlapack_DIR}}
 
-  #   - name: Configure testBLAS
-  #     # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-  #     # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-  #     run: >
-  #       cmake -B build -GNinja
-  #       -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-  #       -D TEST_MPFR=ON
-  #       -D Catch2_DIR=${{env.Catch2_DIR}}
-  #       -D tlapack_DIR=${{env.tlapack_DIR}}
+    - name: Build testBLAS
+      # Build your program with the given configuration
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
 
-  #   - name: Build testBLAS
-  #     # Build your program with the given configuration
-  #     run: cmake --build build --config ${{env.BUILD_TYPE}}
-
-  #   # Mind that the job won't fail if only this step fails
-  #   - name: Run tests
-  #     working-directory: ${{github.workspace}}/build
-  #     continue-on-error: true
-  #     run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+    # Mind that the job won't fail if only this step fails
+    - name: Run tests
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
   test-blaspp-wrappers:
     runs-on: ubuntu-latest

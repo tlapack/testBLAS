@@ -8,51 +8,29 @@
 #define TESTBLAS_DEFINES_HH
 
 #include <complex>
-#include <cstdint> // Defines std::int64_t
 
-#ifndef TEST_REAL_STD_TYPES
-    #define TEST_REAL_STD_TYPES \
+//-----------------------------------------------------------------------------
+#ifndef TEST_REAL_TYPES
+    #define TEST_REAL_TYPES \
         float, \
         double
 #endif
 
-#ifndef TEST_CPLX_STD_TYPES
-    #define TEST_CPLX_STD_TYPES \
+#ifndef TEST_CPLX_TYPES
+    #define TEST_CPLX_TYPES \
         std::complex<float>, \
         std::complex<double>
 #endif
 
-//-----------------------------------------------------------------------------
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-    #ifndef TEST_REAL_TYPES
-        #define TEST_REAL_TYPES TEST_REAL_STD_TYPES, mpfr::mpreal
-    #endif
-    #ifndef TEST_CPLX_TYPES
-        #define TEST_CPLX_TYPES TEST_CPLX_STD_TYPES, std::complex<mpfr::mpreal>
-    #endif
-#else
-    #ifndef TEST_REAL_TYPES
-        #define TEST_REAL_TYPES TEST_REAL_STD_TYPES
-    #endif
-    #ifndef TEST_CPLX_TYPES
-        #define TEST_CPLX_TYPES TEST_CPLX_STD_TYPES
-    #endif
-#endif
-
-//-----------------------------------------------------------------------------
 #ifndef TEST_TYPES
     #define TEST_TYPES TEST_REAL_TYPES, TEST_CPLX_TYPES
 #endif
-#ifndef TEST_STD_TYPES
-    #define TEST_STD_TYPES TEST_REAL_STD_TYPES, TEST_CPLX_STD_TYPES
-#endif
 
 //-----------------------------------------------------------------------------
-#ifndef TEST_BLAS_WRAPPERS_HH
-    #define TEST_BLAS_WRAPPERS_HH
-
-    #include "blas.hpp"
+#if defined(TESTBLAS_USE_BLASPP)
+    #include "blaspp_blas.hpp"
+#elif defined(TESTBLAS_USE_TLAPACK)
+    #include "tlapack_blas.hpp"
 #endif
 
 #endif // TESTBLAS_DEFINES_HH

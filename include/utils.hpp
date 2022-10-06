@@ -16,6 +16,9 @@ namespace testBLAS {
     using std::isnan;
     using std::isinf;
     using std::abs;
+    using std::ceil;
+    using std::floor;
+    using std::pow;
 
     // ------------------------------------------------------------------------
     /// isnan for complex numbers
@@ -32,27 +35,6 @@ namespace testBLAS {
     {
         return isinf( real(x) ) || isinf( imag(x) );
     }
-
-    // The following complex values have unspecified behavior in the C++ standard.
-    //
-    // Complex( inf, nan),
-    // Complex( nan, inf),
-    // Complex(-inf, nan),
-    // Complex( nan,-inf)
-    //
-    // For instance, std::abs applied to std::complex<T>( Inf, NaN ) returns Inf
-    // if T is either float, double, or long double. However, the same function
-    // call returns a NaN if T is the multiprecision type mpfr::mpreal from
-    // https://github.com/advanpix/mpreal. We obtain the same pattern for
-    // (-Inf + NaN*i), (NaN + Inf*i) and (NaN - Inf*i).
-    // Moreover, if T = mpfr::mpreal, std::abs returns a NaN for any of the inputs
-    // (Inf + Inf*i), (-Inf + Inf*i), (Inf + Inf*i), (Inf - Inf*i), (Inf + 0*i),
-    // and (0 - Inf*i). std::abs returns 0 for the input (0 + NaN*i).
-    // 
-    // Another curious operation is the complex division. For each of the standard
-    // types, float, double and long double, the divisions ( 0 + 0*i )/( Inf + NaN*i ),
-    // ( 0 + 0*i )/( -Inf + NaN*i ), ( 0 + 0*i )/( NaN + Inf*i ) and
-    // ( 0 + 0*i )/( NaN - Inf*i ) all return ( 0 + 0*i ).
 
     /**
      * @brief Set the vector nanVec with NaNs for test
