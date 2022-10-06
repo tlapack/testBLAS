@@ -363,7 +363,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         if f_name == "her":
             buffer += "her( layout, uplo, 2, alpha, (complex_t const *)x, incx, A_, 2 );",
         else:
-            buffer += "her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, y, incy, A_, 2 );",
+            buffer += "her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, (complex_t *)y, incy, A_, 2 );",
         buffer += """
         CHECK( (!isnan(A_[0]) && !isnan(A_[1]) && !isnan(A_[2]) && !isnan(A_[3])) ); // i.e., they are not NaN
         CHECK( (std::imag(A_[0]) == real_t(0) && std::imag(A_[3]) == real_t(0)) );
@@ -425,7 +425,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
         if f_name == "herk":
             buffer += "herk( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, beta, C_, 2 );",
         elif f_name == "her2k":
-            buffer += "her2k( layout, uplo, trans, 2, 2, alpha, A, 2, B, 2, beta, C_, 2 );",
+            buffer += "her2k( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, (complex_t const *) B, 2, beta, C_, 2 );",
         buffer += """
         CHECK( (!isnan(C_[0]) && !isnan(C_[1]) && !isnan(C_[2]) && !isnan(C_[3])) ); // i.e., they are not NaN
     }}""",
@@ -436,7 +436,7 @@ TEMPLATE_TEST_CASE( \"""" + f_name + """ satisfies all corner cases", "[""" + \
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is not referenced" ) {
         complex_t const A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        hemm( layout, side, uplo, 2, 2, alpha, A_, 2, B, 2, beta, (complex_t*) C, 2 );
+        hemm( layout, side, uplo, 2, 2, alpha, (complex_t const *) A_, 2, (complex_t const *) B, 2, beta, (complex_t*) C, 2 );
         CHECK( (!isnan(C[0]) && !isnan(C[1]) && !isnan(C[2]) && !isnan(C[3])) ); // i.e., they are not NaN
         std::fill_n(C, """+sizeArray+""", 1);
     }}""",

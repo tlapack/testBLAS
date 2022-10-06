@@ -4,6 +4,9 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
+#ifndef TESTBLAS_BLAS_HH
+#define TESTBLAS_BLAS_HH
+
 #include <blas.hh> // from BLAS++
 
 using idx_t = std::int64_t;
@@ -173,3 +176,5 @@ namespace testBLAS {
     using blas::trsm;
 
 }
+
+#endif // TESTBLAS_BLAS_HH

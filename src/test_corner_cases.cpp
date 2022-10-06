@@ -206,7 +206,7 @@ TEMPLATE_TEST_CASE( "rot satisfies all corner cases", "[rot][BLASlv1]", TEST_TYP
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incy = 1;
     real_type<TestType> c = real_t(1);
-    TestType s = real_t(1);
+    real_type<TestType> s = real_t(1);
 
     // Corner cases:
     if( std::is_signed<idx_t>::value ) {
@@ -689,7 +689,7 @@ TEMPLATE_TEST_CASE( "her2 satisfies all corner cases", "[her2][BLASlv2]", TEST_T
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is zero" ) {
         complex_t A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, y, incy, A_, 2 );
+        her2( layout, uplo, 2, alpha, (complex_t const *)x, incx, (complex_t *)y, incy, A_, 2 );
         CHECK( (!isnan(A_[0]) && !isnan(A_[1]) && !isnan(A_[2]) && !isnan(A_[3])) ); // i.e., they are not NaN
         CHECK( (std::imag(A_[0]) == real_t(0) && std::imag(A_[3]) == real_t(0)) );
     }}
@@ -1060,7 +1060,7 @@ TEMPLATE_TEST_CASE( "hemm satisfies all corner cases", "[hemm][BLASlv3]", TEST_T
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of A is not referenced" ) {
         complex_t const A_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        hemm( layout, side, uplo, 2, 2, alpha, A_, 2, B, 2, beta, (complex_t*) C, 2 );
+        hemm( layout, side, uplo, 2, 2, alpha, (complex_t const *) A_, 2, (complex_t const *) B, 2, beta, (complex_t*) C, 2 );
         CHECK( (!isnan(C[0]) && !isnan(C[1]) && !isnan(C[2]) && !isnan(C[3])) ); // i.e., they are not NaN
         std::fill_n(C, 5, 1);
     }}
@@ -1145,7 +1145,7 @@ TEMPLATE_TEST_CASE( "her2k satisfies all corner cases", "[her2k][BLASlv3]", TEST
     using complex_t = complex_type<TestType>;
     SECTION( "Imaginary part of the diagonal of C is zero" ) {
         complex_t C_[] = {{1, real_t(NAN)}, real_t(1), real_t(1), {1, real_t(NAN)}};
-        her2k( layout, uplo, trans, 2, 2, alpha, A, 2, B, 2, beta, C_, 2 );
+        her2k( layout, uplo, trans, 2, 2, alpha, (complex_t const *) A, 2, (complex_t const *) B, 2, beta, C_, 2 );
         CHECK( (!isnan(C_[0]) && !isnan(C_[1]) && !isnan(C_[2]) && !isnan(C_[3])) ); // i.e., they are not NaN
     }}
     SECTION( "C does not need to be set if beta = 0" ) {

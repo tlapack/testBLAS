@@ -53,9 +53,6 @@
     #define TEST_BLAS_WRAPPERS_HH
 
     #include "blas.hpp"
-    
-    using idx_t = std::int64_t;
-    using int_t = std::int64_t;
 #endif
 
 #endif // TESTBLAS_DEFINES_HH
