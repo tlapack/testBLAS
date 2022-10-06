@@ -9,43 +9,28 @@
 
 #include <complex>
 
-#ifndef TEST_REAL_STD_TYPES
-    #define TEST_REAL_STD_TYPES \
+//-----------------------------------------------------------------------------
+#ifndef TEST_REAL_TYPES
+    #define TEST_REAL_TYPES \
         float, \
-        double, \
-        long double
+        double
 #endif
 
-#ifndef TEST_CPLX_STD_TYPES
-    #define TEST_CPLX_STD_TYPES \
+#ifndef TEST_CPLX_TYPES
+    #define TEST_CPLX_TYPES \
         std::complex<float>, \
-        std::complex<double>, \
-        std::complex<long double>
+        std::complex<double>
 #endif
 
-//-----------------------------------------------------------------------------
-#ifdef USE_MPFR
-    #ifndef TEST_REAL_TYPES
-        #define TEST_REAL_TYPES TEST_REAL_STD_TYPES, mpfr::mpreal
-    #endif
-    #ifndef TEST_CPLX_TYPES
-        #define TEST_CPLX_TYPES TEST_CPLX_STD_TYPES, std::complex<mpfr::mpreal>
-    #endif
-#else
-    #ifndef TEST_REAL_TYPES
-        #define TEST_REAL_TYPES TEST_REAL_STD_TYPES
-    #endif
-    #ifndef TEST_CPLX_TYPES
-        #define TEST_CPLX_TYPES TEST_CPLX_STD_TYPES
-    #endif
-#endif
-
-//-----------------------------------------------------------------------------
 #ifndef TEST_TYPES
     #define TEST_TYPES TEST_REAL_TYPES, TEST_CPLX_TYPES
 #endif
-#ifndef TEST_STD_TYPES
-    #define TEST_STD_TYPES TEST_REAL_STD_TYPES, TEST_CPLX_STD_TYPES
+
+//-----------------------------------------------------------------------------
+#if defined(TESTBLAS_USE_BLASPP)
+    #include "blaspp_blas.hpp"
+#elif defined(TESTBLAS_USE_TLAPACK)
+    #include "tlapack_blas.hpp"
 #endif
 
 #endif // TESTBLAS_DEFINES_HH

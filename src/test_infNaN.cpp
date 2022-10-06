@@ -4,19 +4,13 @@
 // testBLAS is free software: you can redistribute it and/or modify it under
 // the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-#include "defines.hpp"
 #include "utils.hpp"
 
 #include <catch2/catch_template_test_macros.hpp>
 #include <limits>
 #include <iostream>
 
-#include <tlapack/legacy_api/blas.hpp>
-#ifdef USE_MPFR
-    #include <tlapack/plugins/mpreal.hpp>
-#endif
-
-using namespace tlapack;
+using namespace testBLAS;
 
 TEMPLATE_TEST_CASE( "NANs work as expected", "[NaN]", TEST_TYPES ) {
     
@@ -50,31 +44,7 @@ TEMPLATE_TEST_CASE( "Infs work as expected", "[Inf]", TEST_TYPES ) {
     }
 }
 
-TEMPLATE_TEST_CASE( "tlapack::abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
-    
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
-    
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
-
-    SECTION( "isnan(tlapack::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec)
-            CHECK( isnan(tlapack::abs(x)) );
-    }
-
-    SECTION( "isinf(tlapack::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec)
-            CHECK( isinf(tlapack::abs(x)) );
-    }
-
-    SECTION( "isinf(tlapack::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec)
-            CHECK( !isinf(tlapack::abs(x)) );
-    }
-}
-
-TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES ) {
+TEMPLATE_TEST_CASE( "abs works as expected", "[NaN][Inf]", TEST_TYPES ) {
     typedef real_type<TestType> real_t;
     
     std::vector<TestType> nan_vec;
@@ -83,34 +53,34 @@ TEMPLATE_TEST_CASE( "std::abs works as expected", "[NaN][Inf]", TEST_STD_TYPES )
     std::vector<TestType> inf_vec;
     testBLAS::set_inf_vector( inf_vec );
 
-    SECTION( "isnan(std::abs(NAN)) == true" ) {
+    SECTION( "isnan(abs(NAN)) == true" ) {
         for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
             CHECK( isnan(y) );
         }
     }
 
-    SECTION( "isinf(std::abs(Inf)) == true" ) {
+    SECTION( "isinf(abs(Inf)) == true" ) {
         for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
             CHECK( isinf(y) );
         }
     }
 
-    SECTION( "isinf(std::abs(NAN)) == false" ) {
+    SECTION( "isinf(abs(NAN)) == false" ) {
         for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
             CHECK( !isinf(y) );
         }
     }
 
-    SECTION( "isnan(std::abs(Inf)) == false" ) {
+    SECTION( "isnan(abs(Inf)) == false" ) {
         for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
+            real_t y = abs(x);
+            INFO( "abs( " << x << " ) = " << y );
             CHECK( !isnan(y) );
         }
     }
@@ -208,72 +178,3 @@ TEMPLATE_TEST_CASE( "Complex division works as expected", "[NaN][Inf]", TEST_TYP
         }
     }
 }
-
-#ifdef USE_MPFR
-TEST_CASE( "mpfr::abs works as expected", "[NaN][Inf]" ) {
-    typedef mpfr::mpreal TestType;
-    
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
-    
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
-
-    SECTION( "isnan(mpfr::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec)
-            CHECK( isnan(mpfr::abs(x)) );
-    }
-
-    SECTION( "isinf(mpfr::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec)
-            CHECK( isinf(mpfr::abs(x)) );
-    }
-
-    SECTION( "isinf(mpfr::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec)
-            CHECK( !isinf(mpfr::abs(x)) );
-    }
-}
-TEST_CASE( "std::abs(std::complex<mpfr::mpreal>) works as expected", "[NaN][Inf]") {
-    typedef std::complex<mpfr::mpreal> TestType;
-    typedef mpfr::mpreal real_t;
-    
-    std::vector<TestType> nan_vec;
-    testBLAS::set_nan_vector( nan_vec );
-    
-    std::vector<TestType> inf_vec;
-    testBLAS::set_inf_vector( inf_vec );
-
-    SECTION( "isnan(std::abs(NAN)) == true" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isnan(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(Inf)) == true" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( isinf(y) );
-        }
-    }
-
-    SECTION( "isinf(std::abs(NAN)) == false" ) {
-        for (const auto& x : nan_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isinf(y) );
-        }
-    }
-
-    SECTION( "isnan(std::abs(Inf)) == false" ) {
-        for (const auto& x : inf_vec) {
-            real_t y = std::abs(x);
-            INFO( "std::abs( " << x << " ) = " << y );
-            CHECK( !isnan(y) );
-        }
-    }
-}
-#endif

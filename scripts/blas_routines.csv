@@ -5,7 +5,7 @@ dot,1, idx_t, n, TestType const *, x, int_t, incx, TestType const *, y, int_t, i
 dotu,1, idx_t, n, TestType const *, x, int_t, incx, TestType const *, y, int_t, incy,,,,,,,,,,,,,,,,,,
 iamax,1, idx_t, n, TestType const *, x, int_t, incx,,,,,,,,,,,,,,,,,,,,,,
 nrm2,1, idx_t, n, TestType const *, x, int_t, incx,,,,,,,,,,,,,,,,,,,,,,
-rot,1, idx_t, n, TestType *, x, int_t, incx, TestType *, y, int_t, incy, real_type<TestType>, c, TestType, s,,,,,,,,,,,,,,
+rot,1, idx_t, n, TestType *, x, int_t, incx, TestType *, y, int_t, incy, real_type<TestType>, c, real_type<TestType>, s,,,,,,,,,,,,,,
 rotg,1, TestType *, a, TestType *, b, real_type<TestType> *, c, TestType *, s,,,,,,,,,,,,,,,,,,,,
 rotm,1, idx_t, n, TestType *, x, int_t, incx, TestType *, y, int_t, incy, TestType const *, param,,,,,,,,,,,,,,,,
 rotmg,1, TestType *, d1, TestType *, d2, TestType *, a, TestType, b, TestType *, param,,,,,,,,,,,,,,,,,,
