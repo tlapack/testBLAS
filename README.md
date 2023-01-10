@@ -100,7 +100,7 @@ See https://github.com/tlapack/testBLAS/actions.
 
 BSD 3-Clause License
 
-Copyright (c) 2021, University of Colorado Denver. All rights reserved.
+Copyright (c) 2021-2023, University of Colorado Denver. All rights reserved.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

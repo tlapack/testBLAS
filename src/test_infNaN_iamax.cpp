@@ -1,7 +1,8 @@
 /// @file test_infNaN_iamax.cpp
+/// @author Weslley S Pereira, University of Colorado Denver, USA
 /// @brief Test cases for iamax with NaNs, Infs and the overflow threshold (OV).
 //
-// Copyright (c) 2021, University of Colorado Denver. All rights reserved.
+// Copyright (c) 2021-2023, University of Colorado Denver. All rights reserved.
 //
 // This file is part of testBLAS.
 // testBLAS is free software: you can redistribute it and/or modify it under
