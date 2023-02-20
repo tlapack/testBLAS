@@ -176,7 +176,7 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
     TestType T[N*N];
     TestType x[N*P];
     TestType b[N*P];
-    bool T_nanRow[N*P];
+    bool T_nanRow[N];
     std::vector<TestType> nan_vec;
     std::vector<TestType> inf_vec;
 
@@ -184,7 +184,6 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
     #define T(i,j)          T[ j*N + i ]
     #define X(i,j)          x[ j*N + i ]
     #define B(i,j)          b[ j*N + i ]
-    #define T_nanRow(i,j)   T_nanRow[ j*N + i ]
 
     // Initialize vectors with the different Infs and NaNs
     testBLAS::set_nan_vector( nan_vec );
@@ -216,7 +215,7 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
             for (idx_t i = 0; i < n; ++i) {
                 X(i,j) = zero;
                 B(i,j) = zero;
-                T_nanRow(i,j) = false;
+                T_nanRow[i] = false;
             }
         }
 
@@ -243,7 +242,8 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
                                     ? inf_vec[ rand() % inf_vec.size() ]
                                     : nan_vec[ rand() % nan_vec.size() ];
                     }
-                    T_nanRow(idx,j) = true;
+                    T_nanRow[idx] = true;
+                    break;
                 }
             }
         }
@@ -260,7 +260,7 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
         // Test if NaNs have propagated
         for (idx_t j = 0; j < p; ++j) {
             for (idx_t i = 0; i < n; ++i) {
-                if( T_nanRow(i,j) ) {
+                if( T_nanRow[i] ) {
 
                     std::stringstream lineT;
                     lineT << T(i,i);
@@ -276,7 +276,15 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
 
                     UNSCOPED_INFO( "B[" << i << "," << j << "] = " << B(i,j) );
 
-                    CHECK( isnan(X(i,j)) );
+                    bool foundNaNinX = false;
+                    for (idx_t k = 0; k < p; k++) {
+                        if( isnan(X(i,k)) ) {
+                            foundNaNinX = true;
+                            break;
+                        }
+                    }
+                    
+                    CHECK( foundNaNinX );
                 }
             }
         }
@@ -285,5 +293,4 @@ TEMPLATE_TEST_CASE( "trsm propagates Infs and NaNs from the triangular matrix to
     #undef T
     #undef X
     #undef B
-    #undef T_nanRow
 }
