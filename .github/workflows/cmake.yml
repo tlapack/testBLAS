@@ -80,7 +80,7 @@ jobs:
       continue-on-error: true
       run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
-  test-blaspp-wrappers:
+  test-reference-BLAS:
     runs-on: ubuntu-latest
     
     steps:
@@ -98,7 +98,56 @@ jobs:
         path: Catch2
 
     - name: Install Reference BLAS
-      run: sudo apt install libblas-dev
+      run: sudo apt install libblas-dev liblapack-dev
+
+    - name: Checkout BLAS++
+      run: |
+        git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
+
+    - name: Build and install BLAS++
+      working-directory: ${{env.blaspp_DIR}}
+      run: |
+        git checkout tlapack
+        cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
+        cmake --build build --target install
+
+    - name: Configure testBLAS
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B build -G Ninja
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -D Catch2_DIR=${{env.Catch2_DIR}}
+        -D blaspp_DIR=${{env.blaspp_DIR}}
+
+    - name: Build testBLAS
+      # Build your program with the given configuration
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+
+    # Mind that the job won't fail if only this step fails
+    - name: Run tests
+      working-directory: ${{github.workspace}}/build
+      continue-on-error: true
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+
+  test-blaspp-wrappers:
+    runs-on: ubuntu-latest
+    env:
+      CXXFLAGS: "-Wall -pedantic -D BLAS_USE_TEMPLATE"
+    
+    steps:
+    
+    - name: Checkout testBLAS
+      uses: actions/checkout@v2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@v3
+
+    - name: Checkout Catch2
+      uses: actions/checkout@v2
+      with:
+        repository: catchorg/Catch2
+        path: Catch2
 
     - name: Checkout BLAS++
       run: |
