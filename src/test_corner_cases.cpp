@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE( "axpy satisfies all corner cases", "[axpy][BLASlv1]", TEST_T
     
     // Default arguments:
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -206,8 +206,8 @@ TEMPLATE_TEST_CASE( "rot satisfies all corner cases", "[rot][BLASlv1]", TEST_TYP
     int_t incx = 1;
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incy = 1;
-    real_type<TestType> c = real_t(1);
-    real_type<TestType> s = real_t(1);
+    real_type<TestType> c = real_t(2);
+    real_type<TestType> s = real_t(3);
 
     // Corner cases:
     if( std::is_signed<idx_t>::value ) {
@@ -299,7 +299,7 @@ TEMPLATE_TEST_CASE( "rotmg satisfies all corner cases", "[rotmg][BLASlv1]", TEST
     TestType d1[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     TestType d2[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     TestType a[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
-    TestType b = real_t(1);
+    TestType b = real_t(2);
     TestType param[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
 
     // Corner cases:
@@ -310,7 +310,7 @@ TEMPLATE_TEST_CASE( "scal satisfies all corner cases", "[scal][BLASlv1]", TEST_T
     
     // Default arguments:
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
 
@@ -378,12 +378,12 @@ TEMPLATE_TEST_CASE( "gemv satisfies all corner cases", "[gemv][BLASlv2]", TEST_T
     Op trans = Op::NoTrans;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incy = 1;
 
@@ -436,7 +436,7 @@ TEMPLATE_TEST_CASE( "ger satisfies all corner cases", "[ger][BLASlv2]", TEST_TYP
     Layout layout = Layout::ColMajor;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType const y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -486,7 +486,7 @@ TEMPLATE_TEST_CASE( "geru satisfies all corner cases", "[geru][BLASlv2]", TEST_T
     Layout layout = Layout::ColMajor;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType const y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -536,12 +536,12 @@ TEMPLATE_TEST_CASE( "hemv satisfies all corner cases", "[hemv][BLASlv2]", TEST_T
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incy = 1;
 
@@ -593,7 +593,7 @@ TEMPLATE_TEST_CASE( "her satisfies all corner cases", "[her][BLASlv2]", TEST_TYP
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    real_type<TestType> alpha = real_t(1);
+    real_type<TestType> alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -646,7 +646,7 @@ TEMPLATE_TEST_CASE( "her2 satisfies all corner cases", "[her2][BLASlv2]", TEST_T
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType const y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -703,12 +703,12 @@ TEMPLATE_TEST_CASE( "symv satisfies all corner cases", "[symv][BLASlv2]", TEST_R
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incy = 1;
 
@@ -752,7 +752,7 @@ TEMPLATE_TEST_CASE( "syr satisfies all corner cases", "[syr][BLASlv2]", TEST_REA
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -797,7 +797,7 @@ TEMPLATE_TEST_CASE( "syr2 satisfies all corner cases", "[syr2][BLASlv2]", TEST_T
     Layout layout = Layout::ColMajor;
     Uplo uplo = Uplo::Upper;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const x[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     int_t incx = 1;
     TestType const y[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -931,12 +931,12 @@ TEMPLATE_TEST_CASE( "gemm satisfies all corner cases", "[gemm][BLASlv3]", TEST_T
     idx_t m = 1;
     idx_t n = 1;
     idx_t k = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldb = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1013,12 +1013,12 @@ TEMPLATE_TEST_CASE( "hemm satisfies all corner cases", "[hemm][BLASlv3]", TEST_T
     Uplo uplo = Uplo::Upper;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldb = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1088,12 +1088,12 @@ TEMPLATE_TEST_CASE( "her2k satisfies all corner cases", "[her2k][BLASlv3]", TEST
     Op trans = Op::NoTrans;
     idx_t n = 1;
     idx_t k = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldb = 1;
-    real_type<TestType> beta = real_t(1);
+    real_type<TestType> beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1172,10 +1172,10 @@ TEMPLATE_TEST_CASE( "herk satisfies all corner cases", "[herk][BLASlv3]", TEST_T
     Op trans = Op::NoTrans;
     idx_t n = 1;
     idx_t k = 1;
-    real_type<TestType> alpha = real_t(1);
+    real_type<TestType> alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
-    real_type<TestType> beta = real_t(1);
+    real_type<TestType> beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1252,12 +1252,12 @@ TEMPLATE_TEST_CASE( "symm satisfies all corner cases", "[symm][BLASlv3]", TEST_T
     Uplo uplo = Uplo::Upper;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldb = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1319,12 +1319,12 @@ TEMPLATE_TEST_CASE( "syr2k satisfies all corner cases", "[syr2k][BLASlv3]", TEST
     Op trans = Op::NoTrans;
     idx_t n = 1;
     idx_t k = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType const B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldb = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1396,10 +1396,10 @@ TEMPLATE_TEST_CASE( "syrk satisfies all corner cases", "[syrk][BLASlv3]", TEST_T
     Op trans = Op::NoTrans;
     idx_t n = 1;
     idx_t k = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
-    TestType beta = real_t(1);
+    TestType beta = real_t(3);
     TestType C[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t ldc = 1;
 
@@ -1471,7 +1471,7 @@ TEMPLATE_TEST_CASE( "trmm satisfies all corner cases", "[trmm][BLASlv3]", TEST_T
     Diag diag = Diag::NonUnit;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
@@ -1525,7 +1525,7 @@ TEMPLATE_TEST_CASE( "trsm satisfies all corner cases", "[trsm][BLASlv3]", TEST_T
     Diag diag = Diag::NonUnit;
     idx_t m = 1;
     idx_t n = 1;
-    TestType alpha = real_t(1);
+    TestType alpha = real_t(2);
     TestType const A[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
     idx_t lda = 1;
     TestType B[] = {real_t(1), real_t(1), real_t(1), real_t(1), real_t(1)};
