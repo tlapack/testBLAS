@@ -107,7 +107,7 @@ jobs:
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout cmake-lapack
+        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
@@ -175,7 +175,7 @@ jobs:
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout cmake-lapack
+        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
@@ -238,7 +238,7 @@ jobs:
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout cmake-lapack
+        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=FLAME -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}} -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_" -D LAPACK_LIBRARIES="${{env.lapack_DIR}}/lib/liblapack.a;-lgfortran"
         cmake --build build --target install
 
@@ -288,7 +288,7 @@ jobs:
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout cmake-lapack
+        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
