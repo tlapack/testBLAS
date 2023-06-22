@@ -38,47 +38,47 @@ namespace testBLAS {
     // =============================================================================
     // Level 1 BLAS template implementations
 
-    using tlapack::asum;
-    using tlapack::axpy;
-    using tlapack::copy;
-    using tlapack::dot;
-    using tlapack::dotu;
-    using tlapack::iamax;
-    using tlapack::nrm2;
-    using tlapack::rot;
-    using tlapack::rotg;
-    using tlapack::rotm;
-    using tlapack::rotmg;
-    using tlapack::scal;
-    using tlapack::swap;
+    using tlapack::legacy::asum;
+    using tlapack::legacy::axpy;
+    using tlapack::legacy::copy;
+    using tlapack::legacy::dot;
+    using tlapack::legacy::dotu;
+    using tlapack::legacy::iamax;
+    using tlapack::legacy::nrm2;
+    using tlapack::legacy::rot;
+    using tlapack::legacy::rotg;
+    using tlapack::legacy::rotm;
+    using tlapack::legacy::rotmg;
+    using tlapack::legacy::scal;
+    using tlapack::legacy::swap;
 
     // =============================================================================
     // Level 2 BLAS template implementations
 
-    using tlapack::gemv;
-    using tlapack::ger;
-    using tlapack::geru;
-    using tlapack::hemv;
-    using tlapack::her;
-    using tlapack::her2;
-    using tlapack::symv;
-    using tlapack::syr;
-    using tlapack::syr2;
-    using tlapack::trmv;
-    using tlapack::trsv;
+    using tlapack::legacy::gemv;
+    using tlapack::legacy::ger;
+    using tlapack::legacy::geru;
+    using tlapack::legacy::hemv;
+    using tlapack::legacy::her;
+    using tlapack::legacy::her2;
+    using tlapack::legacy::symv;
+    using tlapack::legacy::syr;
+    using tlapack::legacy::syr2;
+    using tlapack::legacy::trmv;
+    using tlapack::legacy::trsv;
 
     // =============================================================================
     // Level 3 BLAS template implementations
 
-    using tlapack::gemm;
-    using tlapack::hemm;
-    using tlapack::herk;
-    using tlapack::her2k;
-    using tlapack::symm;
-    using tlapack::syrk;
-    using tlapack::syr2k;
-    using tlapack::trmm;
-    using tlapack::trsm;
+    using tlapack::legacy::gemm;
+    using tlapack::legacy::hemm;
+    using tlapack::legacy::herk;
+    using tlapack::legacy::her2k;
+    using tlapack::legacy::symm;
+    using tlapack::legacy::syrk;
+    using tlapack::legacy::syr2k;
+    using tlapack::legacy::trmm;
+    using tlapack::legacy::trsm;
 
 }
 
