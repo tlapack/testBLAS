@@ -27,13 +27,17 @@ namespace testBLAS {
     using tlapack::real_type;
     using tlapack::complex_type;
     using tlapack::scalar_type;
-    using tlapack::is_complex;
 
     using tlapack::Layout;
     using tlapack::Op;
     using tlapack::Uplo;
     using tlapack::Diag;
     using tlapack::Side;
+
+    template<typename T>
+    struct is_complex {
+        static constexpr bool value = tlapack::is_complex<T>;
+    };
 
     // =============================================================================
     // Level 1 BLAS template implementations
