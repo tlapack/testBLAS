@@ -47,8 +47,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #-------------------------------------------------------------------------------
 # Packages
 
-include(FetchContent)
-
 # Load C++ BLAS wrappers
 if( NOT TARGET ${TESTBLAS_BLAS} )
   find_package( ${TESTBLAS_BLAS} REQUIRED )
@@ -69,12 +67,16 @@ endif()
 #-------------------------------------------------------------------------------
 # Targets
 
-# corner-cases: Generate C++ file for tests with corner cases
-add_custom_target( corner-cases
-COMMAND
-  cd "${CMAKE_CURRENT_SOURCE_DIR}/scripts" &&
-      "${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper_tests.py"
-    > "${CMAKE_CURRENT_SOURCE_DIR}/src/test_corner_cases.cpp" )
+if( PROJECT_IS_TOP_LEVEL )
+
+  # corner-cases: Generate C++ file for tests with corner cases
+  add_custom_target( corner-cases
+  COMMAND
+    cd "${CMAKE_CURRENT_SOURCE_DIR}/scripts" &&
+        "${CMAKE_CURRENT_SOURCE_DIR}/scripts/wrapper_tests.py"
+      > "${CMAKE_CURRENT_SOURCE_DIR}/src/test_corner_cases.cpp" )
+
+endif()
 
 # Test sources
 file( GLOB test_sources
@@ -83,17 +85,17 @@ file( GLOB test_sources
 #-------------------------------------------------------------------------------
 # tester: Program for tests
 
-add_executable( tester ${test_sources} )
+add_executable( testBLAS ${test_sources} )
 
-target_include_directories( tester PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-target_link_libraries( tester PRIVATE Catch2::Catch2WithMain ${TESTBLAS_BLAS} )
+target_include_directories( testBLAS PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_link_libraries( testBLAS PRIVATE Catch2::Catch2WithMain ${TESTBLAS_BLAS} )
 if( TESTBLAS_BLAS STREQUAL "tlapack" )
-  target_compile_definitions( tester PRIVATE TESTBLAS_USE_TLAPACK )
+  target_compile_definitions( testBLAS PRIVATE TESTBLAS_USE_TLAPACK )
 else()
-  target_compile_definitions( tester PRIVATE TESTBLAS_USE_BLASPP )
+  target_compile_definitions( testBLAS PRIVATE TESTBLAS_USE_BLASPP )
 endif()
 
 # Add tests to CTest
 include(CTest)
 include(Catch)
-catch_discover_tests(tester)
+catch_discover_tests(testBLAS)
