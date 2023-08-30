@@ -189,7 +189,7 @@ namespace testBLAS {
      * @ingroup utils
      */
     template <typename real_t>
-    inline constexpr real_t blue_min()
+    constexpr real_t blue_min()
     {
         const real_t half( 0.5 );
         const int fradix = std::numeric_limits<real_t>::radix;
@@ -203,7 +203,7 @@ namespace testBLAS {
      * @ingroup utils
      */
     template <typename real_t>
-    inline constexpr real_t blue_max()
+    constexpr real_t blue_max()
     {
         const real_t half( 0.5 );
         const int fradix = std::numeric_limits<real_t>::radix;
