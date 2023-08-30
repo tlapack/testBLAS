@@ -95,6 +95,13 @@ jobs:
         repository: catchorg/Catch2
         ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+    
+    - name: Checkout BLAS++
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: icl-utk-edu/blaspp
+        ref: f8f983d5b45a8f366aae41fbe9888b14cbae20f8 # v2023.08.25
+        path: blaspp
 
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
@@ -102,14 +109,9 @@ jobs:
     - name: Install Reference BLAS
       run: sudo apt install libblas-dev liblapack-dev
 
-    - name: Checkout BLAS++
-      run: |
-        git clone https://bitbucket.org/weslleyspereira/blaspp ${{env.blaspp_DIR}}
-
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout tlapack
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
@@ -148,18 +150,20 @@ jobs:
         repository: catchorg/Catch2
         ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+    
+    - name: Checkout BLAS++
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: icl-utk-edu/blaspp
+        ref: f8f983d5b45a8f366aae41fbe9888b14cbae20f8 # v2023.08.25
+        path: blaspp
 
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
-    - name: Checkout BLAS++
-      run: |
-        git clone https://github.com/icl-utk-edu/blaspp.git ${{env.blaspp_DIR}}
-
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
@@ -198,10 +202,9 @@ jobs:
         # add signed entry to apt sources and configure the APT client to use Intel repository:
         echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
         sudo apt update
-        
-    - name: Install Intel oneAPI
-      timeout-minutes: 5
-      run: sudo apt install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mkl
+    
+    - name: Checkout testBLAS
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
       uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
@@ -210,25 +213,28 @@ jobs:
         ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
     
-    - name: Checkout testBLAS
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+    - name: Checkout BLAS++
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: icl-utk-edu/blaspp
+        ref: f8f983d5b45a8f366aae41fbe9888b14cbae20f8 # v2023.08.25
+        path: blaspp
 
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
+        
+    - name: Install Intel oneAPI
+      timeout-minutes: 5
+      run: sudo apt install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mkl
 
     - name: Setup Intel oneAPI environment
       run: |
         source /opt/intel/oneapi/setvars.sh
         printenv >> $GITHUB_ENV
 
-    - name: Checkout BLAS++
-      run: |
-        git clone https://github.com/icl-utk-edu/blaspp.git ${{env.blaspp_DIR}}
-
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
@@ -268,6 +274,20 @@ jobs:
         repository: catchorg/Catch2
         ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+    
+    - name: Checkout BLAS++
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: icl-utk-edu/blaspp
+        ref: f8f983d5b45a8f366aae41fbe9888b14cbae20f8 # v2023.08.25
+        path: blaspp
+
+    - name: Checkout LAPACK
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: Reference-LAPACK/lapack
+        ref: 7866626840f5d5e7e27f027a55182da8b3303872 # v3.11.0
+        path: lapack
 
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
@@ -275,24 +295,15 @@ jobs:
     - name: Install BLIS
       run: sudo apt install libblis-dev
 
-    - name: Checkout LAPACK
-      run: |
-        git clone https://github.com/Reference-LAPACK/lapack.git ${{env.lapack_DIR}}
-
     - name: Build and install LAPACK
       working-directory: ${{env.lapack_DIR}}
       run: |
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -D CMAKE_INSTALL_PREFIX=${{env.lapack_DIR}} -D USE_OPTIMIZED_BLAS=ON -D BLA_VENDOR=FLAME
         cmake --build build --target install
 
-    - name: Checkout BLAS++
-      run: |
-        git clone https://github.com/icl-utk-edu/blaspp.git ${{env.blaspp_DIR}}
-
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=FLAME -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}} -D CMAKE_CXX_FLAGS="${{env.CXXFLAGS}} -D LAPACK_FORTRAN_ADD_" -D LAPACK_LIBRARIES="${{env.lapack_DIR}}/lib/liblapack.a;-lgfortran"
         cmake --build build --target install
 
@@ -329,6 +340,13 @@ jobs:
         repository: catchorg/Catch2
         ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+    
+    - name: Checkout BLAS++
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      with:
+        repository: icl-utk-edu/blaspp
+        ref: f8f983d5b45a8f366aae41fbe9888b14cbae20f8 # v2023.08.25
+        path: blaspp
 
     - name: Install ninja-build tool
       uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
@@ -336,14 +354,9 @@ jobs:
     - name: Install OpenBLAS
       run: sudo apt install libopenblas-dev
 
-    - name: Checkout BLAS++
-      run: |
-        git clone https://github.com/icl-utk-edu/blaspp.git ${{env.blaspp_DIR}}
-
     - name: Build and install BLAS++
       working-directory: ${{env.blaspp_DIR}}
       run: |
-        git checkout master
         cmake -B build -G Ninja -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBLA_VENDOR=OpenBLAS -Dbuild_tests=OFF -DCMAKE_INSTALL_PREFIX=${{env.blaspp_DIR}}
         cmake --build build --target install
 
