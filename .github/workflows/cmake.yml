@@ -37,22 +37,23 @@ jobs:
     steps:
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
-
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
 
     - name: Checkout <T>LAPACK
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: tlapack/tlapack
         path: tlapack
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Build and install <T>LAPACK
       working-directory: ${{env.tlapack_DIR}}
@@ -86,16 +87,17 @@ jobs:
     steps:
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
-
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Install Reference BLAS
       run: sudo apt install libblas-dev liblapack-dev
@@ -138,16 +140,17 @@ jobs:
     steps:
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
-
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Checkout BLAS++
       run: |
@@ -201,16 +204,17 @@ jobs:
       run: sudo apt install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mkl
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Setup Intel oneAPI environment
       run: |
@@ -256,16 +260,17 @@ jobs:
     steps:
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
-
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Install BLIS
       run: sudo apt install libblis-dev
@@ -316,16 +321,17 @@ jobs:
     steps:
     
     - name: Checkout testBLAS
-      uses: actions/checkout@v2
-
-    - name: Install ninja-build tool
-      uses: seanmiddleditch/gha-setup-ninja@v3
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
     - name: Checkout Catch2
-      uses: actions/checkout@v2
+      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         repository: catchorg/Catch2
+        ref: 6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
         path: Catch2
+
+    - name: Install ninja-build tool
+      uses: seanmiddleditch/gha-setup-ninja@16b940825621068d98711680b6c3ff92201f8fc0 # v3
 
     - name: Install OpenBLAS
       run: sudo apt install libopenblas-dev

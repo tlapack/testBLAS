@@ -4,7 +4,19 @@
 # testBLAS is free software: you can redistribute it and/or modify it under
 # the terms of the BSD 3-Clause license. See the accompanying LICENSE file.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
+# VERSION 3.11: FetchContent_Declare
+# VERSION 3.14: FetchContent_MakeAvailable
+
+#-------------------------------------------------------------------------------
+# Dependencies on other projects
+include(FetchContent)
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        6e79e682b726f524310d55dec8ddac4e9c52fb5f # v3.4.0
+)
 
 #-------------------------------------------------------------------------------
 # Read project version
@@ -35,18 +47,23 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #-------------------------------------------------------------------------------
 # Packages
 
+include(FetchContent)
+
 # Load C++ BLAS wrappers
 if( NOT TARGET ${TESTBLAS_BLAS} )
   find_package( ${TESTBLAS_BLAS} REQUIRED )
 endif()
 
 # Load Catch2
-include( "${testBLAS_SOURCE_DIR}/cmake/FetchPackage.cmake" )
-FetchPackage( "Catch2" "https://github.com/catchorg/Catch2.git" "v3.0.1" )
-if( EXISTS "${Catch2_SOURCE_DIR}" )
-  list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
+find_package( Catch2 3 QUIET )
+if( NOT Catch2_FOUND )
+  message( STATUS "Making Catch2 available..." )
+  FetchContent_MakeAvailable( Catch2 )
+  list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
+  message( STATUS "  Populated content: ${catch2_SOURCE_DIR}" )
 else()
   list(APPEND CMAKE_MODULE_PATH "${Catch2_DIR}")
+  message( STATUS "Found Catch2: ${Catch2_DIR}" )
 endif()
 
 #-------------------------------------------------------------------------------
