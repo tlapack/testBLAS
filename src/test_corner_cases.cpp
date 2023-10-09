@@ -790,7 +790,7 @@ TEMPLATE_TEST_CASE( "syr satisfies all corner cases", "[syr][BLASlv2]", TEST_REA
     }
 }
 
-TEMPLATE_TEST_CASE( "syr2 satisfies all corner cases", "[syr2][BLASlv2]", TEST_TYPES ) {
+TEMPLATE_TEST_CASE( "syr2 satisfies all corner cases", "[syr2][BLASlv2]", TEST_REAL_TYPES ) {
     using real_t = real_type<TestType>;
     
     // Default arguments:
