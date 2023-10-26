@@ -84,7 +84,7 @@ Here are the testBLAS specific options and their default values
 
 There are 5 workflows that run automatically:
 
-1. Test the [BLAS templates in \<T\>LAPACK](https://github.com/tlapack/tlapack/include/blas).
+1. Test the [BLAS templates in \<T\>LAPACK](https://github.com/tlapack/tlapack/tree/master/include/tlapack/blas).
 
 2. Test [Netlib BLAS](https://github.com/Reference-LAPACK/lapack/tree/master/BLAS/SRC).
 
