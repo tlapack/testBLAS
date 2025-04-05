@@ -2,7 +2,7 @@
 /// @author Weslley S Pereira, University of Colorado Denver, USA
 /// @brief Test cases for nrm2 with NaNs, Infs and values whose under- or overflows when squared.
 //
-// Copyright (c) 2021-2023, University of Colorado Denver. All rights reserved.
+// Copyright (c) 2025, University of Colorado Denver. All rights reserved.
 //
 // This file is part of testBLAS.
 // testBLAS is free software: you can redistribute it and/or modify it under
